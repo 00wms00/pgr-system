@@ -12,6 +12,8 @@ class Unidade extends Model
 {
     use HasFactory, BelongsToEmpresa;
 
+    protected $table = 'unidades';
+
     protected $fillable = ['empresa_id', 'codigo', 'nome', 'endereco'];
 
     public function empresa(): BelongsTo

@@ -11,6 +11,8 @@ class Ghe extends Model
 {
     use HasFactory;
 
+    protected $table = 'ghes';
+
     protected $fillable = ['setor_id', 'codigo', 'nome', 'descricao_atividades', 'ativo'];
 
     public function setor(): BelongsTo

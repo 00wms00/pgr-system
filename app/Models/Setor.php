@@ -11,6 +11,8 @@ class Setor extends Model
 {
     use HasFactory;
 
+    protected $table = 'setores';
+
     protected $fillable = ['unidade_id', 'nome', 'descricao'];
 
     public function unidade(): BelongsTo
