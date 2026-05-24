@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AvaliacaoRisco extends Model
 {
@@ -11,33 +12,46 @@ class AvaliacaoRisco extends Model
 
     protected $fillable = [
         'risco_inventario_id',
-        'data_avaliacao',
         'probabilidade',
         'severidade',
         'nivel_risco',
-        'classificacao',
+        'data_avaliacao',
         'metodologia',
+        'classificacao',
         'justificativa',
+        'avaliado_por',
     ];
 
     protected $casts = [
         'data_avaliacao' => 'date',
+        'probabilidade'  => 'integer',
+        'severidade'     => 'integer',
+        'nivel_risco'    => 'integer',
     ];
 
-    protected static function booted(): void
+    // Classificacao calculada a partir do nivel_risco (P x S)
+    public static function classificar(int $nivel): string
     {
-        static::saving(function (self $avaliacao) {
-            $avaliacao->nivel_risco = (int) $avaliacao->probabilidade * (int) $avaliacao->severidade;
-            $avaliacao->classificacao = match (true) {
-                $avaliacao->nivel_risco <= 4 => 'baixo',
-                $avaliacao->nivel_risco <= 12 => 'moderado',
-                default => 'alto',
-            };
-        });
+        return match (true) {
+            $nivel <= 4  => 'baixo',
+            $nivel <= 9  => 'moderado',
+            $nivel <= 16 => 'alto',
+            default      => 'critico',
+        };
     }
 
     public function riscoInventario(): BelongsTo
     {
-        return $this->belongsTo(RiscoInventario::class, 'risco_inventario_id');
+        return $this->belongsTo(RiscoInventario::class);
+    }
+
+    public function avaliador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'avaliado_por');
+    }
+
+    public function planosAcao(): HasMany
+    {
+        return $this->hasMany(PlanoAcao::class);
     }
 }

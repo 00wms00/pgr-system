@@ -16,38 +16,55 @@ class AvaliacaoRiscoController extends Controller
 
     public function store(AvaliacaoRiscoRequest $request, RiscoInventario $risco)
     {
-        $avaliacao = $risco->avaliacoes()->create($request->validated());
+        $data = $request->validated();
+
+        $nivel = $data['probabilidade'] * $data['severidade'];
+
+        $avaliacao = $risco->avaliacoes()->create([
+            ...$data,
+            'nivel_risco'   => $nivel,
+            'classificacao' => AvaliacaoRisco::classificar($nivel),
+            'metodologia'   => $data['metodologia'] ?? 'Matriz 5x5 (P x S)',
+            'avaliado_por'  => auth()->id(),
+        ]);
 
         return redirect()->route('avaliacoes.show', $avaliacao)
-            ->with('success', 'Avaliação registrada com sucesso.');
+            ->with('success', 'Avaliação registrada.');
     }
 
     public function show(AvaliacaoRisco $avaliacao)
     {
-        $avaliacao->load('riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo');
+        $avaliacao->load(['riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo', 'planosAcao', 'avaliador']);
         return view('avaliacoes.show', compact('avaliacao'));
     }
 
     public function edit(AvaliacaoRisco $avaliacao)
     {
-        $avaliacao->load('riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo');
+        $avaliacao->load(['riscoInventario.riscoTipo']);
         return view('avaliacoes.edit', compact('avaliacao'));
     }
 
     public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao)
     {
-        $avaliacao->update($request->validated());
+        $data = $request->validated();
+        $nivel = $data['probabilidade'] * $data['severidade'];
+
+        $avaliacao->update([
+            ...$data,
+            'nivel_risco'   => $nivel,
+            'classificacao' => AvaliacaoRisco::classificar($nivel),
+            'metodologia'   => $data['metodologia'] ?? 'Matriz 5x5 (P x S)',
+        ]);
 
         return redirect()->route('avaliacoes.show', $avaliacao)
-            ->with('success', 'Avaliação atualizada com sucesso.');
+            ->with('success', 'Avaliação atualizada.');
     }
 
     public function destroy(AvaliacaoRisco $avaliacao)
     {
-        $risco = $avaliacao->riscoInventario;
+        $riscoId = $avaliacao->risco_inventario_id;
         $avaliacao->delete();
-
-        return redirect()->route('riscos.show', $risco)
-            ->with('success', 'Avaliação removida com sucesso.');
+        return redirect()->route('riscos.show', $riscoId)
+            ->with('success', 'Avaliação removida.');
     }
 }

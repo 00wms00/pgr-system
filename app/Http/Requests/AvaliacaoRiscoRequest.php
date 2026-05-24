@@ -8,17 +8,26 @@ class AvaliacaoRiscoRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->canWrite();
+        return auth()->check();
     }
 
     public function rules(): array
     {
         return [
+            'probabilidade'  => ['required', 'integer', 'min:1', 'max:5'],
+            'severidade'     => ['required', 'integer', 'min:1', 'max:5'],
             'data_avaliacao' => ['required', 'date'],
-            'probabilidade' => ['required', 'integer', 'min:1', 'max:5'],
-            'severidade' => ['required', 'integer', 'min:1', 'max:5'],
-            'metodologia' => ['nullable', 'string', 'max:255'],
-            'justificativa' => ['nullable', 'string'],
+            'metodologia'    => ['nullable', 'string', 'max:100'],
+            'justificativa'  => ['nullable', 'string'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'probabilidade'  => 'probabilidade',
+            'severidade'     => 'severidade',
+            'data_avaliacao' => 'data da avaliação',
         ];
     }
 }
