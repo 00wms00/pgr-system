@@ -10,11 +10,23 @@ use Illuminate\Http\Request;
 
 class RiscoInventarioController extends Controller
 {
+    /**
+     * Só retorna GHEs cujo setor->unidade->empresa_id == empresa do usuário logado.
+     */
+    private function ghesEmpresa()
+    {
+        return Ghe::whereHas('setor.unidade', function ($q) {
+            $q->where('empresa_id', auth()->user()->empresa_id);
+        })->with('setor.unidade')->orderBy('nome')->get();
+    }
+
     public function index(Request $request)
     {
-        $ghes = Ghe::orderBy('nome')->get();
+        $ghes = $this->ghesEmpresa();
+        $gheIds = $ghes->pluck('id');
 
         $riscos = RiscoInventario::with(['ghe.setor.unidade', 'riscoTipo', 'avaliacoes'])
+            ->whereIn('ghe_id', $gheIds)
             ->when($request->filled('ghe_id'), fn ($q) => $q->where('ghe_id', $request->integer('ghe_id')))
             ->latest()
             ->paginate(20)
@@ -25,7 +37,7 @@ class RiscoInventarioController extends Controller
 
     public function create(Request $request)
     {
-        $ghes = Ghe::with('setor.unidade')->orderBy('nome')->get();
+        $ghes = $this->ghesEmpresa();
         $tipos = RiscoTipo::orderBy('grupo')->orderBy('nome')->get();
         $selectedGheId = $request->integer('ghe_id');
 
@@ -48,7 +60,7 @@ class RiscoInventarioController extends Controller
 
     public function edit(RiscoInventario $risco)
     {
-        $ghes = Ghe::with('setor.unidade')->orderBy('nome')->get();
+        $ghes = $this->ghesEmpresa();
         $tipos = RiscoTipo::orderBy('grupo')->orderBy('nome')->get();
         return view('riscos.edit', compact('risco', 'ghes', 'tipos'));
     }
