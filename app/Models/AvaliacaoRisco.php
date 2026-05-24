@@ -10,6 +10,15 @@ class AvaliacaoRisco extends Model
 {
     protected $table = 'avaliacoes_risco';
 
+    /**
+     * Evita que o Laravel translitere o acento de 'avaliacao'
+     * e gere um parametro de rota truncado ('avaliaco').
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'id';
+    }
+
     protected $fillable = [
         'risco_inventario_id',
         'probabilidade',
@@ -29,7 +38,6 @@ class AvaliacaoRisco extends Model
         'nivel_risco'    => 'integer',
     ];
 
-    // Classificacao calculada a partir do nivel_risco (P x S)
     public static function classificar(int $nivel): string
     {
         return match (true) {

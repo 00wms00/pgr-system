@@ -26,17 +26,20 @@ Route::middleware(['auth', 'role:admin,gestor'])->group(function () {
     Route::resource('ghes',       \App\Http\Controllers\GheController::class);
     Route::resource('riscos',     \App\Http\Controllers\RiscoInventarioController::class);
 
-    // Avaliações — aninhadas em riscos para create/store
-    Route::get( '/riscos/{risco}/avaliar',     [\App\Http\Controllers\AvaliacaoRiscoController::class, 'create'])->name('avaliacoes.create');
-    Route::post('/riscos/{risco}/avaliacoes',  [\App\Http\Controllers\AvaliacaoRiscoController::class, 'store'])->name('avaliacoes.store');
-    Route::resource('avaliacoes', \App\Http\Controllers\AvaliacaoRiscoController::class)->except('create', 'store');
+    // Avaliações — parametro explicitamente 'avaliacao' (sem acento no bind)
+    Route::get(   '/riscos/{risco}/avaliar',          [\App\Http\Controllers\AvaliacaoRiscoController::class, 'create'])->name('avaliacoes.create');
+    Route::post(  '/riscos/{risco}/avaliacoes',        [\App\Http\Controllers\AvaliacaoRiscoController::class, 'store'])->name('avaliacoes.store');
+    Route::get(   '/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'show'])->name('avaliacoes.show');
+    Route::get(   '/avaliacoes/{avaliacao}/edit',      [\App\Http\Controllers\AvaliacaoRiscoController::class, 'edit'])->name('avaliacoes.edit');
+    Route::put(   '/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'update'])->name('avaliacoes.update');
+    Route::delete('/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'destroy'])->name('avaliacoes.destroy');
 
-    // Planos de ação — aninhados em avaliações para create
-    Route::get( '/avaliacoes/{avaliacao}/planos/create', [\App\Http\Controllers\PlanoAcaoController::class, 'create'])->name('planos.create');
-    Route::post('/planos',                               [\App\Http\Controllers\PlanoAcaoController::class, 'store'])->name('planos.store');
-    Route::get( '/planos/{plano}/edit',                  [\App\Http\Controllers\PlanoAcaoController::class, 'edit'])->name('planos.edit');
-    Route::put( '/planos/{plano}',                       [\App\Http\Controllers\PlanoAcaoController::class, 'update'])->name('planos.update');
-    Route::delete('/planos/{plano}',                     [\App\Http\Controllers\PlanoAcaoController::class, 'destroy'])->name('planos.destroy');
+    // Planos de ação
+    Route::get(   '/avaliacoes/{avaliacao}/planos/create', [\App\Http\Controllers\PlanoAcaoController::class, 'create'])->name('planos.create');
+    Route::post(  '/planos',                               [\App\Http\Controllers\PlanoAcaoController::class, 'store'])->name('planos.store');
+    Route::get(   '/planos/{plano}/edit',                  [\App\Http\Controllers\PlanoAcaoController::class, 'edit'])->name('planos.edit');
+    Route::put(   '/planos/{plano}',                       [\App\Http\Controllers\PlanoAcaoController::class, 'update'])->name('planos.update');
+    Route::delete('/planos/{plano}',                       [\App\Http\Controllers\PlanoAcaoController::class, 'destroy'])->name('planos.destroy');
 });
 
 // ----------------------------------------------------------------
