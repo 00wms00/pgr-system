@@ -1,4 +1,3 @@
-// app/Enums/UserRole.php
 <?php
 
 namespace App\Enums;
