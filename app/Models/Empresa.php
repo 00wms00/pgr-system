@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Empresa extends Model
 {
-    protected $table = 'empresas';
-
     protected $fillable = [
         'razao_social',
         'nome_fantasia',
@@ -26,8 +24,13 @@ class Empresa extends Model
         return $this->hasMany(Unidade::class);
     }
 
-    public function users(): HasMany
+    public function usuarios(): HasMany
     {
         return $this->hasMany(User::class);
+    }
+
+    public function getNomeExibicaoAttribute(): string
+    {
+        return $this->nome_fantasia ?: $this->razao_social;
     }
 }
