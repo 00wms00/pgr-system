@@ -10,7 +10,11 @@ class SetorController extends Controller
 {
     public function index()
     {
-        $setores = Setor::with('unidade')->orderBy('nome')->paginate(20);
+        // Unidade usa BelongsToEmpresa, setores filtrados via unidade
+        $setores = Setor::whereHas('unidade', function ($q) {
+            $q->where('empresa_id', auth()->user()->empresa_id);
+        })->with('unidade')->orderBy('nome')->paginate(20);
+
         return view('setores.index', compact('setores'));
     }
 
@@ -23,13 +27,12 @@ class SetorController extends Controller
     public function store(SetorRequest $request)
     {
         Setor::create($request->validated());
-        return redirect()->route('setores.index')
-            ->with('success', 'Setor criado com sucesso.');
+        return redirect()->route('setores.index')->with('success', 'Setor criado com sucesso.');
     }
 
     public function show(Setor $setor)
     {
-        $setor->load('ghes');
+        $setor->load('unidade', 'ghes');
         return view('setores.show', compact('setor'));
     }
 
@@ -42,14 +45,12 @@ class SetorController extends Controller
     public function update(SetorRequest $request, Setor $setor)
     {
         $setor->update($request->validated());
-        return redirect()->route('setores.index')
-            ->with('success', 'Setor atualizado.');
+        return redirect()->route('setores.index')->with('success', 'Setor atualizado.');
     }
 
     public function destroy(Setor $setor)
     {
         $setor->delete();
-        return redirect()->route('setores.index')
-            ->with('success', 'Setor removido.');
+        return redirect()->route('setores.index')->with('success', 'Setor removido.');
     }
 }

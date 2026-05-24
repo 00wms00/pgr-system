@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Setor extends Model
 {
-    protected $table = 'setores';
+    use HasFactory;
 
     protected $fillable = ['unidade_id', 'nome', 'descricao'];
 

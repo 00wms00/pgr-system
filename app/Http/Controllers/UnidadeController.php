@@ -21,8 +21,7 @@ class UnidadeController extends Controller
     public function store(UnidadeRequest $request)
     {
         Unidade::create($request->validated());
-        return redirect()->route('unidades.index')
-            ->with('success', 'Unidade criada com sucesso.');
+        return redirect()->route('unidades.index')->with('success', 'Unidade criada com sucesso.');
     }
 
     public function show(Unidade $unidade)
@@ -39,14 +38,12 @@ class UnidadeController extends Controller
     public function update(UnidadeRequest $request, Unidade $unidade)
     {
         $unidade->update($request->validated());
-        return redirect()->route('unidades.index')
-            ->with('success', 'Unidade atualizada.');
+        return redirect()->route('unidades.index')->with('success', 'Unidade atualizada.');
     }
 
     public function destroy(Unidade $unidade)
     {
         $unidade->delete();
-        return redirect()->route('unidades.index')
-            ->with('success', 'Unidade removida.');
+        return redirect()->route('unidades.index')->with('success', 'Unidade removida.');
     }
 }
