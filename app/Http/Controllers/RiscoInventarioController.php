@@ -26,7 +26,7 @@ class RiscoInventarioController extends Controller
     public function create(Request $request)
     {
         $ghes = Ghe::with('setor.unidade')->orderBy('nome')->get();
-        $tipos = RiscoTipo::orderBy('categoria')->orderBy('nome')->get();
+        $tipos = RiscoTipo::orderBy('grupo')->orderBy('nome')->get();
         $selectedGheId = $request->integer('ghe_id');
 
         return view('riscos.create', compact('ghes', 'tipos', 'selectedGheId'));
@@ -37,7 +37,7 @@ class RiscoInventarioController extends Controller
         $risco = RiscoInventario::create($request->validated());
 
         return redirect()->route('avaliacoes.create', $risco)
-            ->with('success', 'Risco inventariado com sucesso. Agora registre a avaliação.');
+            ->with('success', 'Risco inventariado. Registre agora a avaliação.');
     }
 
     public function show(RiscoInventario $risco)
@@ -49,24 +49,19 @@ class RiscoInventarioController extends Controller
     public function edit(RiscoInventario $risco)
     {
         $ghes = Ghe::with('setor.unidade')->orderBy('nome')->get();
-        $tipos = RiscoTipo::orderBy('categoria')->orderBy('nome')->get();
-
+        $tipos = RiscoTipo::orderBy('grupo')->orderBy('nome')->get();
         return view('riscos.edit', compact('risco', 'ghes', 'tipos'));
     }
 
     public function update(RiscoInventarioRequest $request, RiscoInventario $risco)
     {
         $risco->update($request->validated());
-
-        return redirect()->route('riscos.show', $risco)
-            ->with('success', 'Risco atualizado com sucesso.');
+        return redirect()->route('riscos.show', $risco)->with('success', 'Risco atualizado.');
     }
 
     public function destroy(RiscoInventario $risco)
     {
         $risco->delete();
-
-        return redirect()->route('riscos.index')
-            ->with('success', 'Risco removido com sucesso.');
+        return redirect()->route('riscos.index')->with('success', 'Risco removido.');
     }
 }

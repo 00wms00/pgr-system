@@ -7,15 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RiscoTipo extends Model
 {
-    public $timestamps = false;
-
     protected $table = 'riscos_tipos';
 
     protected $fillable = [
-        'codigo',
+        'codigo_esocial',
         'nome',
-        'categoria',
-        'descricao',
+        'grupo',
     ];
 
     public function riscosInventario(): HasMany
