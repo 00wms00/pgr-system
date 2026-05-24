@@ -15,6 +15,8 @@ class RiscoInventario extends Model
         'risco_tipo_id',
         'agente',
         'fonte_geradora',
+        'via_absorcao',
+        'tecnica_utilizada',
         'possiveis_lesoes',
         'danos_saude',
         'medidas_existentes',
@@ -28,16 +30,16 @@ class RiscoInventario extends Model
 
     public function riscoTipo(): BelongsTo
     {
-        return $this->belongsTo(RiscoTipo::class, 'risco_tipo_id');
+        return $this->belongsTo(RiscoTipo::class);
     }
 
     public function avaliacoes(): HasMany
     {
-        return $this->hasMany(AvaliacaoRisco::class, 'risco_inventario_id')->latest('data_avaliacao');
+        return $this->hasMany(AvaliacaoRisco::class);
     }
 
-    public function avaliacaoAtual(): HasMany
+    public function ultimaAvaliacao()
     {
-        return $this->hasMany(AvaliacaoRisco::class, 'risco_inventario_id')->latest('data_avaliacao')->limit(1);
+        return $this->avaliacoes()->latest()->first();
     }
 }
