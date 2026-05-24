@@ -1,137 +1,150 @@
 {{--
-    Componente reutilizavel: Matriz 5x5 Probabilidade x Severidade
+    Componente: Matriz 5x5 Probabilidade x Severidade
     Props:
-      $selectedP  (int|null) - probabilidade selecionada (1-5)
-      $selectedS  (int|null) - severidade selecionada (1-5)
-      $interactive (bool)    - se true, celulas sao clicaveis e atualizam os inputs
+      $selectedP   (int|null) probabilidade pre-selecionada
+      $selectedS   (int|null) severidade pre-selecionada
+      $interactive (bool)     true = clicavel, false = so visualizacao
 --}}
 @php
     $labels_p = [
-        1 => ['label' => '1 - Muito Baixa', 'sub' => 'Improvavel'],
-        2 => ['label' => '2 - Baixa',        'sub' => 'Remota'],
-        3 => ['label' => '3 - Media',         'sub' => 'Ocasional'],
-        4 => ['label' => '4 - Alta',          'sub' => 'Provavel'],
-        5 => ['label' => '5 - Muito Alta',    'sub' => 'Frequente'],
+        5 => ['num' => '5', 'sub' => 'Muito Alta / Frequente'],
+        4 => ['num' => '4', 'sub' => 'Alta / Provavel'],
+        3 => ['num' => '3', 'sub' => 'Media / Ocasional'],
+        2 => ['num' => '2', 'sub' => 'Baixa / Remota'],
+        1 => ['num' => '1', 'sub' => 'Muito Baixa / Improvavel'],
     ];
     $labels_s = [
-        1 => ['label' => '1', 'sub' => 'Insignificante'],
-        2 => ['label' => '2', 'sub' => 'Leve'],
-        3 => ['label' => '3', 'sub' => 'Moderado'],
-        4 => ['label' => '4', 'sub' => 'Grave'],
-        5 => ['label' => '5', 'sub' => 'Catastrofico'],
+        1 => 'Insignificante',
+        2 => 'Leve',
+        3 => 'Moderado',
+        4 => 'Grave',
+        5 => 'Catastrofico',
     ];
 
-    $classificar = function(int $n): array {
-        return match(true) {
-            $n <= 4  => ['label' => 'Baixo',    'bg' => 'bg-green-200',  'text' => 'text-green-900',  'ring' => 'ring-green-500'],
-            $n <= 9  => ['label' => 'Moderado', 'bg' => 'bg-yellow-200', 'text' => 'text-yellow-900', 'ring' => 'ring-yellow-500'],
-            $n <= 16 => ['label' => 'Alto',     'bg' => 'bg-orange-300', 'text' => 'text-orange-900', 'ring' => 'ring-orange-500'],
-            default  => ['label' => 'Critico',  'bg' => 'bg-red-400',    'text' => 'text-red-900',    'ring' => 'ring-red-600'],
-        };
+    // Retorna cor de fundo, cor do texto e nome
+    $cor = function(int $n): array {
+        if ($n <= 4)  return ['bg' => '#bbf7d0', 'text' => '#14532d', 'border' => '#16a34a', 'nome' => 'Baixo'];
+        if ($n <= 9)  return ['bg' => '#fef08a', 'text' => '#713f12', 'border' => '#ca8a04', 'nome' => 'Moderado'];
+        if ($n <= 16) return ['bg' => '#fdba74', 'text' => '#7c2d12', 'border' => '#ea580c', 'nome' => 'Alto'];
+        return             ['bg' => '#fca5a5', 'text' => '#7f1d1d', 'border' => '#dc2626', 'nome' => 'Critico'];
     };
 
-    $selectedP = $selectedP ?? null;
-    $selectedS = $selectedS ?? null;
+    $selectedP   = $selectedP   ?? null;
+    $selectedS   = $selectedS   ?? null;
     $interactive = $interactive ?? false;
 @endphp
 
-<div x-data="matrizRisco({{ $selectedP ?? 'null' }}, {{ $selectedS ?? 'null' }})" class="overflow-x-auto">
+<div x-data="matrizRisco({{ $selectedP ?? 'null' }}, {{ $selectedS ?? 'null' }})">
 
-    {{-- Inputs hidden sincronizados (so no modo interativo) --}}
     @if($interactive)
         <input type="hidden" name="probabilidade" :value="prob">
         <input type="hidden" name="severidade"    :value="sev">
     @endif
 
-    {{-- Legenda resultado --}}
-    <div class="mb-3 flex items-center gap-3" @if(!$interactive) style="display:flex" @endif>
-        <span class="text-sm text-gray-600">Resultado:</span>
+    {{-- Badge resultado (modo interativo) --}}
+    @if($interactive)
+    <div class="mb-3 h-8 flex items-center gap-2">
         <template x-if="prob && sev">
-            <span
-                class="inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold"
-                :class="classificacao().bg + ' ' + classificacao().text">
-                <span x-text="prob + ' x ' + sev + ' = ' + (prob * sev)"></span>
-                <span>&mdash;</span>
-                <span x-text="classificacao().label"></span>
-            </span>
+            <div x-html="badgeHtml()" class="inline-flex"></div>
         </template>
         <template x-if="!prob || !sev">
-            <span class="text-sm text-gray-400 italic">Clique em uma celula para selecionar</span>
+            <span style="font-size:0.85rem;color:#6b7280;font-style:italic">Clique em uma c&eacute;lula da matriz para selecionar</span>
         </template>
     </div>
+    @endif
 
-    <table class="border-collapse text-center text-xs select-none">
-        <thead>
-            <tr>
-                {{-- celula vazia canto superior esquerdo --}}
-                <td class="p-1" colspan="2"></td>
-                <td colspan="5" class="pb-1 text-center text-xs font-semibold text-gray-600 uppercase tracking-wide">
-                    Severidade &rarr;
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2"></td>
-                @foreach($labels_s as $s => $ls)
-                    <th class="w-20 px-1 py-2 font-semibold text-gray-700">
-                        <div>{{ $ls['label'] }}</div>
-                        <div class="font-normal text-gray-400">{{ $ls['sub'] }}</div>
-                    </th>
-                @endforeach
-            </tr>
-        </thead>
-        <tbody>
-            @foreach(array_reverse(array_keys($labels_p), true) as $p)
+    {{-- Tabela --}}
+    <div style="overflow-x:auto">
+        <table style="border-collapse:separate;border-spacing:0;font-size:0.78rem">
+            <thead>
                 <tr>
-                    {{-- Label probabilidade (so na primeira linha do grupo) --}}
-                    @if($loop->first)
-                        <td rowspan="5" class="pr-2 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap"
-                            style="writing-mode: vertical-lr; transform: rotate(180deg); text-align:center">
-                            &larr; Probabilidade
-                        </td>
-                    @endif
-                    <td class="pr-2 py-1 text-left font-medium text-gray-700 whitespace-nowrap">
-                        <div>{{ $labels_p[$p]['label'] }}</div>
-                        <div class="text-gray-400 font-normal">{{ $labels_p[$p]['sub'] }}</div>
+                    <td colspan="2"></td>
+                    <td colspan="5" style="text-align:center;padding-bottom:4px;font-size:0.7rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em">
+                        Severidade &rarr;
                     </td>
-
-                    @foreach($labels_s as $s => $ls)
-                        @php
-                            $nivel = $p * $s;
-                            $cls = $classificar($nivel);
-                            $isSelected = ($p === $selectedP && $s === $selectedS);
-                        @endphp
-                        <td class="p-0.5">
-                            <button
-                                type="{{ $interactive ? 'button' : 'button' }}"
-                                @if($interactive)
-                                    @click="select({{ $p }}, {{ $s }})"
-                                    :class="{
-                                        'ring-2 ring-offset-1 scale-105 shadow-md z-10 relative': prob == {{ $p }} && sev == {{ $s }},
-                                        '{{ $cls['ring'] }}': prob == {{ $p }} && sev == {{ $s }}
-                                    }"
-                                @endif
-                                class="w-16 h-12 rounded flex flex-col items-center justify-center gap-0.5 font-bold transition-all duration-150
-                                    {{ $cls['bg'] }} {{ $cls['text'] }}
-                                    @if($interactive) cursor-pointer hover:brightness-90 hover:scale-105 @else cursor-default @endif
-                                    @if($isSelected && !$interactive) ring-2 ring-offset-1 ring-gray-800 scale-105 shadow @endif"
-                                @if(!$interactive) disabled @endif
-                            >
-                                <span class="text-base leading-none">{{ $nivel }}</span>
-                                <span class="text-[10px] font-normal opacity-75">{{ $cls['label'] }}</span>
-                            </button>
-                        </td>
+                </tr>
+                <tr>
+                    <td colspan="2"></td>
+                    @foreach($labels_s as $s => $sub)
+                        <th style="width:72px;padding:4px 2px;font-weight:600;color:#374151;text-align:center">
+                            <div style="font-size:0.85rem">{{ $s }}</div>
+                            <div style="font-size:0.65rem;font-weight:400;color:#9ca3af">{{ $sub }}</div>
+                        </th>
                     @endforeach
                 </tr>
-            @endforeach
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach($labels_p as $p => $lp)
+                    <tr>
+                        @if($loop->first)
+                            <td rowspan="5" style="padding-right:4px;vertical-align:middle">
+                                <div style="writing-mode:vertical-lr;transform:rotate(180deg);font-size:0.7rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">
+                                    &larr; Probabilidade
+                                </div>
+                            </td>
+                        @endif
+                        <td style="padding-right:8px;padding-top:3px;padding-bottom:3px;vertical-align:middle;white-space:nowrap">
+                            <div style="font-weight:600;color:#374151">{{ $lp['num'] }}</div>
+                            <div style="font-size:0.65rem;color:#9ca3af">{{ $lp['sub'] }}</div>
+                        </td>
+
+                        @foreach($labels_s as $s => $sub)
+                            @php
+                                $n   = $p * $s;
+                                $c   = $cor($n);
+                                $sel = ($p === $selectedP && $s === $selectedS);
+                            @endphp
+                            <td style="padding:2px">
+                                <button
+                                    type="button"
+                                    @if($interactive)
+                                        @click="select({{ $p }}, {{ $s }})"
+                                        :style="prob == {{ $p }} && sev == {{ $s }}
+                                            ? 'background:{{ $c['bg'] }};color:{{ $c['text'] }};outline:3px solid {{ $c['border'] }};outline-offset:2px;transform:scale(1.08);z-index:10;position:relative;box-shadow:0 2px 8px rgba(0,0,0,.18)'
+                                            : 'background:{{ $c['bg'] }};color:{{ $c['text'] }};'"
+                                    @endif
+                                    style="
+                                        width:68px;
+                                        height:46px;
+                                        border:none;
+                                        border-radius:5px;
+                                        display:flex;
+                                        flex-direction:column;
+                                        align-items:center;
+                                        justify-content:center;
+                                        gap:1px;
+                                        cursor:{{ $interactive ? 'pointer' : 'default' }};
+                                        transition:transform .12s,box-shadow .12s;
+                                        background:{{ $c['bg'] }};
+                                        color:{{ $c['text'] }};
+                                        @if($sel && !$interactive)
+                                            outline:3px solid {{ $c['border'] }};
+                                            outline-offset:2px;
+                                            transform:scale(1.06);
+                                            box-shadow:0 2px 8px rgba(0,0,0,.18);
+                                            position:relative;
+                                            z-index:10;
+                                        @endif
+                                    "
+                                    @if(!$interactive) disabled @endif
+                                >
+                                    <span style="font-size:1rem;font-weight:700;line-height:1">{{ $n }}</span>
+                                    <span style="font-size:0.6rem;opacity:.85">{{ $c['nome'] }}</span>
+                                </button>
+                            </td>
+                        @endforeach
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 
     {{-- Legenda --}}
-    <div class="mt-3 flex flex-wrap gap-3 text-xs">
-        <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-green-200"></span> Baixo (1-4)</span>
-        <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-yellow-200"></span> Moderado (5-9)</span>
-        <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-orange-300"></span> Alto (10-16)</span>
-        <span class="flex items-center gap-1"><span class="inline-block w-4 h-4 rounded bg-red-400"></span> Critico (17-25)</span>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;font-size:0.75rem;color:#374151">
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#bbf7d0"></span> Baixo (1–4)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fef08a"></span> Moderado (5–9)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fdba74"></span> Alto (10–16)</span>
+        <span style="display:flex;align-items:center;gap:5px"><span style="display:inline-block;width:14px;height:14px;border-radius:3px;background:#fca5a5"></span> Cr&iacute;tico (17–25)</span>
     </div>
 </div>
 
@@ -139,21 +152,25 @@
 @push('scripts')
 <script>
 function matrizRisco(initP, initS) {
+    const cores = (n) => {
+        if (n <= 4)  return { bg:'#bbf7d0', text:'#14532d', border:'#16a34a', nome:'Baixo' };
+        if (n <= 9)  return { bg:'#fef08a', text:'#713f12', border:'#ca8a04', nome:'Moderado' };
+        if (n <= 16) return { bg:'#fdba74', text:'#7c2d12', border:'#ea580c', nome:'Alto' };
+        return             { bg:'#fca5a5', text:'#7f1d1d', border:'#dc2626', nome:'Critico' };
+    };
     return {
         prob: initP,
         sev:  initS,
-        select(p, s) {
-            this.prob = p;
-            this.sev  = s;
-        },
-        classificacao() {
+        select(p, s) { this.prob = p; this.sev = s; },
+        badgeHtml() {
+            if (!this.prob || !this.sev) return '';
             const n = this.prob * this.sev;
-            if (n <= 4)  return { label: 'Baixo',    bg: 'bg-green-200',  text: 'text-green-900' };
-            if (n <= 9)  return { label: 'Moderado', bg: 'bg-yellow-200', text: 'text-yellow-900' };
-            if (n <= 16) return { label: 'Alto',     bg: 'bg-orange-300', text: 'text-orange-900' };
-                         return { label: 'Critico',  bg: 'bg-red-400',    text: 'text-red-900' };
+            const c = cores(n);
+            return `<span style="display:inline-flex;align-items:center;gap:6px;border-radius:9999px;padding:3px 12px;font-size:0.85rem;font-weight:600;background:${c.bg};color:${c.text}">
+                ${this.prob} &times; ${this.sev} = <strong>${n}</strong> &mdash; ${c.nome}
+            </span>`;
         }
-    }
+    };
 }
 </script>
 @endpush
