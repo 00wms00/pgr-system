@@ -57,23 +57,20 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação registrada com sucesso.');
     }
 
+    /**
+     * Rota shallow: GET /avaliacoes/{avaliacao}
+     *
+     * Usa fresh() antes do load() para garantir que nenhum relacionamento
+     * parcial em cache (vindo de eager loads anteriores na mesma requisição)
+     * impeça o carregamento completo da hierarquia necessária para a Policy.
+     */
     public function show(AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao->load([
+        $avaliacao = $avaliacao->fresh([
             'riscoInventario.ghe.setor.unidade',
             'riscoInventario.riscoTipo',
             'avaliador',
             'planosAcao',
-        ]);
-
-        // DEBUG TEMPORÁRIO — apagar após confirmar
-        $u = auth()->user();
-        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
-        dd([
-            'auth_id'            => $u?->id,
-            'auth_empresa_id'    => $u?->empresa_id,
-            'unidade_empresa_id' => $unidade?->empresa_id,
-            'match'              => (int)$u?->empresa_id === (int)$unidade?->empresa_id,
         ]);
 
         Gate::authorize('view', $avaliacao);
@@ -83,9 +80,12 @@ class AvaliacaoRiscoController extends Controller
         return view('avaliacoes.show', compact('risco', 'avaliacao'));
     }
 
+    /**
+     * Rota shallow: GET /avaliacoes/{avaliacao}/edit
+     */
     public function edit(AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
 
         Gate::authorize('update', $avaliacao);
 
@@ -95,9 +95,12 @@ class AvaliacaoRiscoController extends Controller
         return view('avaliacoes.edit', compact('risco', 'avaliacao'));
     }
 
+    /**
+     * Rota shallow: PUT /avaliacoes/{avaliacao}
+     */
     public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao): RedirectResponse
     {
-        $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
 
         Gate::authorize('update', $avaliacao);
 
@@ -111,9 +114,12 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação atualizada.');
     }
 
+    /**
+     * Rota shallow: DELETE /avaliacoes/{avaliacao}
+     */
     public function destroy(AvaliacaoRisco $avaliacao): RedirectResponse
     {
-        $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
 
         Gate::authorize('delete', $avaliacao);
 
