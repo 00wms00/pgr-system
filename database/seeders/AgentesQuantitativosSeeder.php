@@ -7,32 +7,23 @@ use App\Models\AgenteFaixa;
 use App\Models\RiscoTipo;
 use Illuminate\Database\Seeder;
 
-/**
- * Agentes quantitativos com faixas baseadas em:
- *  - NR-15 Anexo I  : Ruído Contínuo/Intermitente
- *  - NR-15 Anexo II : Ruído de Impacto  (dB Linear)
- *  - NR-15 Anexo III: Calor (IBUTG °C)
- *
- * Matriz 5×5 (Probabilidade × Severidade):
- *  1-4   = Baixo | 5-9 = Moderado | 10-16 = Alto | ≥17 = Crítico
- */
 class AgentesQuantitativosSeeder extends Seeder
 {
     public function run(): void
     {
-        // Busca o risco_tipo de Físico (ajuste o nome conforme seu seeder)
-        $fisico = RiscoTipo::where('tipo', 'fisico')->orWhere('nome', 'like', '%sico%')->first();
+        // Coluna correta é 'grupo', não 'tipo'
+        $fisico = RiscoTipo::where('grupo', 'like', '%sico%')->first();
 
         if (! $fisico) {
             $this->command->warn('RiscoTipo físico não encontrado. Execute o RiscoTiposSeeder antes.');
+            $this->command->warn('Grupos disponíveis: ' . RiscoTipo::pluck('grupo')->implode(', '));
             return;
         }
 
+        $this->command->info("Usando RiscoTipo: [{$fisico->id}] {$fisico->nome} (grupo: {$fisico->grupo})");
+
         // ================================================================
         // 1. RUÍDO CONTÍNUO / INTERMITENTE — NR-15 Anexo I
-        // Nível de Ação NHO-01 Fundacentro: 80 dB(A)
-        // Limite de Tolerância: 85 dB(A)
-        // RGI (NR-3): > 115 dB(A)
         // ================================================================
         $ruidoContinuo = AgenteQuantitativo::updateOrCreate(
             ['nome' => 'Ruído Contínuo / Intermitente', 'risco_tipo_id' => $fisico->id],
@@ -92,9 +83,6 @@ class AgentesQuantitativosSeeder extends Seeder
 
         // ================================================================
         // 2. RUÍDO DE IMPACTO — NR-15 Anexo II
-        // Medição: circuito Linear (resposta para impacto)
-        // Limite de Tolerância: 130 dB(linear)
-        // RGI: > 140 dB(linear)
         // ================================================================
         $ruidoImpacto = AgenteQuantitativo::updateOrCreate(
             ['nome' => 'Ruído de Impacto', 'risco_tipo_id' => $fisico->id],
@@ -153,10 +141,7 @@ class AgentesQuantitativosSeeder extends Seeder
         ]);
 
         // ================================================================
-        // 3. CALOR (IBUTG) — NR-15 Anexo III
-        // Referência: Atividade Moderada (tipo mais comum em indústria)
-        // Limite trabalho contínuo: IBUTG 26,7°C (moderada)
-        // Proibição trabalho: IBUTG > 31,1°C (moderada)
+        // 3. CALOR (IBUTG) — NR-15 Anexo III (Atividade Moderada)
         // ================================================================
         $calor = AgenteQuantitativo::updateOrCreate(
             ['nome' => 'Calor (IBUTG)', 'risco_tipo_id' => $fisico->id],
@@ -214,12 +199,11 @@ class AgentesQuantitativosSeeder extends Seeder
             ],
         ]);
 
-        $this->command->info('✅ AgentesQuantitativos: Ruído Contínuo, Ruído de Impacto e Calor (IBUTG) cadastrados.');
+        $this->command->info('✅ AgentesQuantitativos: Ruído Contínuo, Ruído de Impacto e Calor (IBUTG) cadastrados com sucesso.');
     }
 
     private function criarFaixas(int $agenteId, array $faixas): void
     {
-        // Remove faixas antigas do agente para idempotência
         AgenteFaixa::where('agente_quantitativo_id', $agenteId)->delete();
 
         foreach ($faixas as $f) {
