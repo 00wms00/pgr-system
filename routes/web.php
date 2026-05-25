@@ -21,10 +21,18 @@ Route::middleware('auth')->group(function () {
 // Escrita — admin e gestor
 // ----------------------------------------------------------------
 Route::middleware(['auth', 'role:admin,gestor'])->group(function () {
-    Route::resource('unidades',   \App\Http\Controllers\UnidadeController::class);
-    Route::resource('setores',    \App\Http\Controllers\SetorController::class);
-    Route::resource('ghes',       \App\Http\Controllers\GheController::class);
-    Route::resource('riscos',     \App\Http\Controllers\RiscoInventarioController::class);
+    // parameters() força o nome correto do parâmetro (Laravel usa inglês para singularizar)
+    Route::resource('unidades', \App\Http\Controllers\UnidadeController::class)
+         ->parameters(['unidades' => 'unidade']);
+
+    Route::resource('setores', \App\Http\Controllers\SetorController::class)
+         ->parameters(['setores' => 'setor']);
+
+    Route::resource('ghes', \App\Http\Controllers\GheController::class)
+         ->parameters(['ghes' => 'ghe']);
+
+    Route::resource('riscos', \App\Http\Controllers\RiscoInventarioController::class)
+         ->parameters(['riscos' => 'risco']);
 
     // Avaliações
     Route::get(   '/riscos/{risco}/avaliar',          [\App\Http\Controllers\AvaliacaoRiscoController::class, 'create'])->name('avaliacoes.create');
@@ -49,6 +57,10 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::resource('empresas', \App\Http\Controllers\Admin\EmpresaController::class);
-        Route::resource('usuarios', \App\Http\Controllers\Admin\UsuarioController::class)->except('show');
+        Route::resource('empresas', \App\Http\Controllers\Admin\EmpresaController::class)
+             ->parameters(['empresas' => 'empresa']);
+
+        Route::resource('usuarios', \App\Http\Controllers\Admin\UsuarioController::class)
+             ->parameters(['usuarios' => 'usuario'])
+             ->except('show');
     });
