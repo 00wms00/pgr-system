@@ -1,45 +1,37 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('avaliacoes.show', $avaliacao) }}" class="text-gray-400 hover:text-gray-600">&larr;</a>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Novo Plano de A&ccedil;&atilde;o
-            </h2>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
+@section('titulo', 'Novo Plano de Ação')
 
-            {{-- Contexto --}}
-            <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-6 text-sm">
-                <p class="font-semibold text-indigo-800">{{ $avaliacao->riscoInventario->riscoTipo->nome }}</p>
-                <p class="text-indigo-600 mt-0.5">
-                    GHE: {{ $avaliacao->riscoInventario->ghe->nome }} &mdash;
-                    Risco:
-                    @php
-                        $badgeColors = ['baixo'=>'#bbf7d0|#14532d','moderado'=>'#fef08a|#713f12','alto'=>'#fdba74|#7c2d12','critico'=>'#fca5a5|#7f1d1d'];
-                        [$bg, $fg] = explode('|', $badgeColors[$avaliacao->classificacao] ?? '#e5e7eb|#374151');
-                    @endphp
-                    <span style="background:{{ $bg }};color:{{ $fg }};padding:1px 8px;border-radius:9999px;font-size:.75rem;font-weight:600">
-                        {{ ucfirst($avaliacao->classificacao) }} ({{ $avaliacao->nivel_risco }})
-                    </span>
-                </p>
-            </div>
-
-            <div class="bg-white shadow sm:rounded-lg p-6">
-                <form method="POST" action="{{ route('planos.store') }}">
-                    @csrf
-                    <input type="hidden" name="avaliacao_risco_id" value="{{ $avaliacao->id }}">
-                    @include('planos._form', ['plano' => null])
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-                        <a href="{{ route('avaliacoes.show', $avaliacao) }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</a>
-                        <button type="submit" class="px-5 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">
-                            Salvar Plano
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+@section('conteudo')
+<div style="max-width:720px">
+    <div style="margin-bottom:20px">
+        <a href="{{ route('avaliacoes.show', $avaliacao) }}"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:#64748b;text-decoration:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Voltar à Avaliação
+        </a>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:8px 0 2px">Novo Plano de Ação</h2>
+        <p style="font-size:.8rem;color:#64748b;margin:0">
+            {{ $avaliacao->riscoInventario->agente ?? $avaliacao->riscoInventario->fonte_geradora }}
+            &mdash; Nível de Risco <strong>{{ $avaliacao->nivel_risco }}</strong>
+            ({{ ucfirst($avaliacao->classificacao) }})
+        </p>
     </div>
-</x-app-layout>
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:24px">
+        <form method="POST" action="{{ route('avaliacoes.planos.store', $avaliacao) }}">
+            @csrf
+            @include('planos._form')
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9">
+                <button type="submit"
+                    style="background:#3b82f6;color:#fff;padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:600;border:none;cursor:pointer">
+                    Salvar Plano
+                </button>
+                <a href="{{ route('avaliacoes.show', $avaliacao) }}"
+                    style="padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:500;color:#475569;background:#f1f5f9;text-decoration:none">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

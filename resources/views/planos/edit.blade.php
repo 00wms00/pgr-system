@@ -1,28 +1,36 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center gap-3">
-            <a href="{{ route('avaliacoes.show', $plano->avaliacao_risco_id) }}" class="text-gray-400 hover:text-gray-600">&larr;</a>
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Editar Plano de A&ccedil;&atilde;o
-            </h2>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow sm:rounded-lg p-6">
-                <form method="POST" action="{{ route('planos.update', $plano) }}">
-                    @csrf @method('PUT')
-                    <input type="hidden" name="avaliacao_risco_id" value="{{ $plano->avaliacao_risco_id }}">
-                    @include('planos._form', ['plano' => $plano])
-                    <div class="flex justify-end gap-3 mt-6 pt-4 border-t">
-                        <a href="{{ route('avaliacoes.show', $plano->avaliacao_risco_id) }}" class="px-4 py-2 text-sm text-gray-600 hover:text-gray-900">Cancelar</a>
-                        <button type="submit" class="px-5 py-2 bg-indigo-600 text-white text-sm rounded-md hover:bg-indigo-700">
-                            Atualizar Plano
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+@section('titulo', 'Editar Plano de Ação')
+
+@section('conteudo')
+<div style="max-width:720px">
+    <div style="margin-bottom:20px">
+        <a href="{{ route('planos.show', $plano) }}"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:#64748b;text-decoration:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Voltar
+        </a>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:8px 0 2px">Editar Plano de Ação</h2>
+        <p style="font-size:.8rem;color:#64748b;margin:0">
+            {{ Str::limit($plano->descricao, 80) }}
+        </p>
     </div>
-</x-app-layout>
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:24px">
+        <form method="POST" action="{{ route('planos.update', $plano) }}">
+            @csrf @method('PUT')
+            @php $avaliacao = $plano->avaliacaoRisco; @endphp
+            @include('planos._form')
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9">
+                <button type="submit"
+                    style="background:#3b82f6;color:#fff;padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:600;border:none;cursor:pointer">
+                    Salvar Alterações
+                </button>
+                <a href="{{ route('planos.show', $plano) }}"
+                    style="padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:500;color:#475569;background:#f1f5f9;text-decoration:none">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
