@@ -1,130 +1,127 @@
-@php
-    $p = old('probabilidade', $avaliacao->probabilidade ?? null);
-    $s = old('severidade',    $avaliacao->severidade    ?? null);
-@endphp
+{{-- Requer: $risco (RiscoInventario). Opcional: $avaliacao (para editar) --}}
 
-<div class="space-y-6">
+<div style="display:grid;gap:20px">
 
-    {{-- ============================================================
-         BLOCO QUANTITATIVO — só aparece se o tipo de risco tem
-         agentes quantitativos cadastrados (ex: Ruído, Calor, etc.)
-    ============================================================ --}}
-    <div x-show="agentes.length > 0" x-transition style="display:none">
-        <div style="border:1px solid #c7d2fe;border-radius:8px;padding:16px;background:#eef2ff">
-            <p style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#4338ca;margin-bottom:12px">
-                📊 Medição Quantitativa (opcional)
-            </p>
+    {{-- Matriz visual P x S --}}
+    <div x-data="matrizRisco({{ old('probabilidade', $avaliacao->probabilidade ?? $defaults['probabilidade'] ?? '') }}, {{ old('severidade', $avaliacao->severidade ?? $defaults['severidade'] ?? '') }})">
 
-            {{-- Seleção do agente específico --}}
-            <div style="margin-bottom:12px">
-                <label style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:4px">
-                    Agente Específico
-                </label>
-                <select
-                    name="agente_quantitativo_id"
-                    x-model="agenteId"
-                    @change="onAgenteChange"
-                    style="width:100%;border:1px solid #d1d5db;border-radius:6px;padding:8px 10px;font-size:.85rem;background:#fff"
-                >
-                    <option value="">— Selecione para medição quantitativa —</option>
-                    <template x-for="ag in agentes" :key="ag.id">
-                        <option :value="ag.id" x-text="ag.nome"></option>
-                    </template>
-                </select>
-            </div>
+        <p style="font-size:.82rem;font-weight:600;color:#374151;margin:0 0 12px">Probabilidade &times; Severidade <span style="color:#ef4444">*</span></p>
 
-            {{-- Campo de valor medido --}}
-            <div x-show="agenteId" x-transition>
-                <label
-                    style="font-size:.8rem;font-weight:600;color:#374151;display:block;margin-bottom:4px"
-                    x-text="agenteAtual?.campo_label ?? 'Valor Medido'"
-                ></label>
-                <div style="display:flex;align-items:center">
-                    <input
-                        type="number"
-                        name="valor_medido"
-                        x-model="valorMedido"
-                        @blur="calcular"
-                        :step="agenteAtual?.input_step ?? '0.1'"
-                        min="0"
-                        placeholder="0.0"
-                        style="flex:1;border:1px solid #d1d5db;border-right:none;border-radius:6px 0 0 6px;padding:8px 10px;font-size:.95rem;font-weight:600"
-                    />
-                    <span
-                        style="background:#e2e8f0;border:1px solid #d1d5db;border-radius:0 6px 6px 0;padding:8px 12px;font-size:.82rem;color:#374151;font-weight:700;white-space:nowrap"
-                        x-text="agenteAtual?.unidade_medida ?? ''"
-                    ></span>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+            {{-- Probabilidade --}}
+            <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <label style="font-size:.8rem;font-weight:600;color:#374151">Probabilidade</label>
+                    <span x-text="probLabel" style="font-size:.78rem;font-weight:600;color:#3b82f6"></span>
                 </div>
-                <p style="font-size:.7rem;color:#9ca3af;margin-top:3px">Pressione Tab ou clique fora para calcular automaticamente</p>
-            </div>
-
-            {{-- Resultado do cálculo --}}
-            <div x-show="riscoCalc.classificacao" x-transition style="margin-top:12px">
-                <div style="display:flex;gap:12px;flex-wrap:wrap">
-                    <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px 14px;text-align:center;min-width:80px">
-                        <p style="font-size:.65rem;color:#6b7280;margin-bottom:2px">Probabilidade</p>
-                        <p style="font-size:1.2rem;font-weight:700;color:#1e293b" x-text="riscoCalc.probabilidade"></p>
-                    </div>
-                    <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px 14px;text-align:center;min-width:80px">
-                        <p style="font-size:.65rem;color:#6b7280;margin-bottom:2px">Severidade</p>
-                        <p style="font-size:1.2rem;font-weight:700;color:#1e293b" x-text="riscoCalc.severidade"></p>
-                    </div>
-                    <div style="background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px 14px;text-align:center;flex:1;min-width:120px">
-                        <p style="font-size:.65rem;color:#6b7280;margin-bottom:2px">Classificação</p>
-                        <p style="font-size:.9rem;font-weight:700" x-text="riscoCalc.classificacao"></p>
-                    </div>
+                <input type="range" name="probabilidade" min="1" max="5" step="1"
+                    x-model="prob" @input="calcular"
+                    style="width:100%;accent-color:#3b82f6">
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#94a3b8;margin-top:2px">
+                    <span>1 &ndash; Muito Baixa</span><span>5 &ndash; Muito Alta</span>
                 </div>
-                <p style="font-size:.72rem;color:#6b7280;margin-top:8px">✅ Os valores foram preenchidos automaticamente na matriz abaixo.</p>
             </div>
+            {{-- Severidade --}}
+            <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px">
+                    <label style="font-size:.8rem;font-weight:600;color:#374151">Severidade</label>
+                    <span x-text="sevLabel" style="font-size:.78rem;font-weight:600;color:#3b82f6"></span>
+                </div>
+                <input type="range" name="severidade" min="1" max="5" step="1"
+                    x-model="sev" @input="calcular"
+                    style="width:100%;accent-color:#3b82f6">
+                <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#94a3b8;margin-top:2px">
+                    <span>1 &ndash; Desprezível</span><span>5 &ndash; Catástrofe</span>
+                </div>
+            </div>
+        </div>
 
-            {{-- Campos hidden para sincronizar com a matriz --}}
-            <input type="hidden" name="probabilidade_calculada" :value="riscoCalc.probabilidade">
-            <input type="hidden" name="severidade_calculada"    :value="riscoCalc.severidade">
+        {{-- Resultado calculado --}}
+        <div :style="'background:' + resultadoBg + ';border:1px solid ' + resultadoBorder"
+            style="border-radius:8px;padding:14px 18px;display:flex;align-items:center;gap:16px;transition:background .25s">
+            <div style="text-align:center;min-width:64px">
+                <div :style="'color:' + resultadoColor"
+                    style="font-size:2rem;font-weight:900;line-height:1" x-text="nivel"></div>
+                <div :style="'color:' + resultadoColor"
+                    style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em" x-text="classificacaoLabel"></div>
+            </div>
+            <div>
+                <p :style="'color:' + resultadoColor" style="font-size:.85rem;font-weight:700;margin:0 0 2px"
+                    x-text="'Nível de Risco: ' + nivel + ' (P' + prob + ' × S' + sev + ')'">
+                </p>
+                <p :style="'color:' + resultadoColor" style="font-size:.78rem;margin:0;opacity:.8"
+                    x-text="descricaoRisco">
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- Data da Avaliação --}}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+            <label for="data_avaliacao" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+                Data da Avaliação <span style="color:#ef4444">*</span>
+            </label>
+            <input type="date" id="data_avaliacao" name="data_avaliacao"
+                value="{{ old('data_avaliacao', isset($avaliacao) ? $avaliacao->data_avaliacao->format('Y-m-d') : now()->format('Y-m-d')) }}"
+                max="{{ now()->format('Y-m-d') }}"
+                style="width:100%;padding:8px 12px;border:1px solid {{ $errors->has('data_avaliacao') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b">
+            @error('data_avaliacao')<p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label for="metodologia" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">Metodologia</label>
+            <select id="metodologia" name="metodologia"
+                style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:.85rem;color:#1e293b;background:#fff">
+                <option value="">Não informado</option>
+                <option value="qualitativo"     @selected(old('metodologia', $avaliacao->metodologia ?? '') === 'qualitativo')>Qualitativo</option>
+                <option value="semi_quantitativo" @selected(old('metodologia', $avaliacao->metodologia ?? '') === 'semi_quantitativo')>Semi-quantitativo</option>
+                <option value="quantitativo"   @selected(old('metodologia', $avaliacao->metodologia ?? '') === 'quantitativo')>Quantitativo</option>
+            </select>
         </div>
     </div>
 
-    {{-- ============================================================
-         DATA
-    ============================================================ --}}
+    {{-- Justificativa --}}
     <div>
-        <x-input-label for="data_avaliacao" value="Data da Avaliação" />
-        <x-text-input id="data_avaliacao" name="data_avaliacao" type="date" class="mt-1 block w-48"
-            :value="old('data_avaliacao', isset($avaliacao) ? $avaliacao->data_avaliacao?->format('Y-m-d') : now()->format('Y-m-d'))" required />
-        <x-input-error :messages="$errors->get('data_avaliacao')" class="mt-1" />
-    </div>
-
-    {{-- ============================================================
-         MATRIZ P × S
-    ============================================================ --}}
-    <div>
-        <x-input-label value="Selecione a célula na Matriz P × S" />
-        @if($errors->has('probabilidade') || $errors->has('severidade'))
-            <p class="mt-1 text-sm text-red-600">Selecione uma célula na matriz.</p>
-        @endif
-        <div class="mt-2">
-            @include('avaliacoes._matrix', ['selectedP' => $p, 'selectedS' => $s, 'interactive' => true])
-        </div>
-    </div>
-
-    {{-- ============================================================
-         METODOLOGIA
-    ============================================================ --}}
-    <div>
-        <x-input-label for="metodologia" value="Metodologia" />
-        <x-text-input id="metodologia" name="metodologia" type="text" class="mt-1 block w-full"
-            :value="old('metodologia', $avaliacao->metodologia ?? 'Matriz 5x5 (P x S)')" />
-        <x-input-error :messages="$errors->get('metodologia')" class="mt-1" />
-    </div>
-
-    {{-- ============================================================
-         JUSTIFICATIVA
-    ============================================================ --}}
-    <div>
-        <x-input-label for="justificativa" value="Justificativa" />
-        <textarea id="justificativa" name="justificativa" rows="5"
-            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-        >{{ old('justificativa', $avaliacao->justificativa ?? '') }}</textarea>
-        <x-input-error :messages="$errors->get('justificativa')" class="mt-1" />
+        <label for="justificativa" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">Justificativa / Contexto</label>
+        <textarea id="justificativa" name="justificativa" rows="3" maxlength="2000"
+            placeholder="Descreva as condições avaliadas, critérios adotados, observações relevantes..."
+            style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:.85rem;color:#1e293b;resize:vertical">{{ old('justificativa', $avaliacao->justificativa ?? '') }}</textarea>
     </div>
 
 </div>
+
+@push('scripts')
+<script>
+function matrizRisco(probInicial, sevInicial) {
+    const PROB_LABELS = { 1:'Muito Baixa', 2:'Baixa', 3:'Média', 4:'Alta', 5:'Muito Alta' };
+    const SEV_LABELS  = { 1:'Desprezível', 2:'Marginal', 3:'Crítica', 4:'Catastrófica', 5:'Catástrofe' };
+    const DESCRICOES  = {
+        baixo:    'Risco aceitável. Monitorar periódicamente.',
+        moderado: 'Requer controles. Plano de ação recomendado.',
+        alto:     'Controles imediatos necessários. Ação prioritária.',
+        critico:  'Risco inaceitável. Intervenção imediata obrigatória.',
+    };
+    return {
+        prob: probInicial || 3,
+        sev:  sevInicial  || 3,
+        get nivel()             { return this.prob * this.sev; },
+        get classificacao()     {
+            const n = this.nivel;
+            if (n <= 4)  return 'baixo';
+            if (n <= 9)  return 'moderado';
+            if (n <= 16) return 'alto';
+            return 'critico';
+        },
+        get classificacaoLabel(){ return { baixo:'Baixo', moderado:'Moderado', alto:'Alto', critico:'Crítico' }[this.classificacao]; },
+        get descricaoRisco()    { return DESCRICOES[this.classificacao]; },
+        get probLabel()         { return PROB_LABELS[this.prob] || this.prob; },
+        get sevLabel()          { return SEV_LABELS[this.sev]   || this.sev; },
+        get resultadoBg()       { return { baixo:'#f0fdf4', moderado:'#fefce8', alto:'#fff7ed', critico:'#fef2f2' }[this.classificacao]; },
+        get resultadoBorder()   { return { baixo:'#bbf7d0', moderado:'#fef08a', alto:'#fed7aa', critico:'#fecaca' }[this.classificacao]; },
+        get resultadoColor()    { return { baixo:'#166534', moderado:'#854d0e', alto:'#9a3412', critico:'#991b1b' }[this.classificacao]; },
+        calcular() {},
+    };
+}
+</script>
+@endpush

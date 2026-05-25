@@ -6,6 +6,7 @@ use App\Http\Controllers\UnidadeController;
 use App\Http\Controllers\SetorController;
 use App\Http\Controllers\GheController;
 use App\Http\Controllers\RiscoInventarioController;
+use App\Http\Controllers\AvaliacaoRiscoController;
 use App\Http\Controllers\PlanoAcaoController;
 use App\Http\Controllers\RelatorioPgrController;
 use App\Http\Controllers\ProfileController;
@@ -45,6 +46,10 @@ Route::middleware(['auth'])->group(function () {
 
     // Sprint 5: Riscos Inventário
     Route::resource('riscos', RiscoInventarioController::class);
+
+    // Sprint 6: Avaliações de Risco (nested resource)
+    Route::resource('riscos.avaliacoes', AvaliacaoRiscoController::class)
+        ->shallow();
 
     // Sprints futuras (stubs)
     Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');

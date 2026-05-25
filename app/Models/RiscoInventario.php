@@ -13,6 +13,7 @@ class RiscoInventario extends Model
     protected $fillable = [
         'ghe_id',
         'risco_tipo_id',
+        'agente_quantitativo_id',
         'agente',
         'fonte_geradora',
         'via_absorcao',
@@ -21,6 +22,16 @@ class RiscoInventario extends Model
         'danos_saude',
         'medidas_existentes',
         'observacoes',
+        'valor_medido',
+        'probabilidade_calculada',
+        'severidade_calculada',
+        'classificacao_calculada',
+    ];
+
+    protected $casts = [
+        'valor_medido'            => 'decimal:4',
+        'probabilidade_calculada' => 'integer',
+        'severidade_calculada'    => 'integer',
     ];
 
     public function ghe(): BelongsTo
@@ -33,13 +44,18 @@ class RiscoInventario extends Model
         return $this->belongsTo(RiscoTipo::class);
     }
 
+    public function agenteQuantitativo(): BelongsTo
+    {
+        return $this->belongsTo(AgenteQuantitativo::class);
+    }
+
     public function avaliacoes(): HasMany
     {
         return $this->hasMany(AvaliacaoRisco::class);
     }
 
-    public function ultimaAvaliacao()
+    public function ultimaAvaliacao(): ?AvaliacaoRisco
     {
-        return $this->avaliacoes()->latest()->first();
+        return $this->avaliacoes()->latest('data_avaliacao')->first();
     }
 }

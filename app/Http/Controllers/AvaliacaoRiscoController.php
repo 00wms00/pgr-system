@@ -5,103 +5,104 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AvaliacaoRiscoRequest;
 use App\Models\AvaliacaoRisco;
 use App\Models\RiscoInventario;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\View\View;
 
 class AvaliacaoRiscoController extends Controller
 {
-    public function create(RiscoInventario $risco)
+    /**
+     * Avaliações são sempre contextualizadas dentro de um RiscoInventario.
+     * Rota: riscos.{risco}.avaliacoes.*  (nested resource)
+     */
+
+    public function index(RiscoInventario $risco): View
     {
-        $risco->load(['ghe.setor.unidade', 'riscoTipo.agentesQuantitativos.faixas']);
+        Gate::authorize('viewAny', [AvaliacaoRisco::class, $risco]);
 
-        // Monta JSON de agentes para o Alpine.js
-        $agentesJson = $risco->riscoTipo->agentesQuantitativos->map(fn ($ag) => [
-            'id'                => $ag->id,
-            'nome'              => $ag->nome,
-            'unidade_medida'    => $ag->unidade_medida,
-            'campo_label'       => $ag->campo_label,
-            'nivel_acao'        => $ag->nivel_acao,
-            'limite_tolerancia' => $ag->limite_tolerancia,
-            'input_step'        => $ag->input_step ?? '0.1',
-            'faixas'            => $ag->faixas->map(fn ($f) => [
-                'valor_min'       => $f->valor_min,
-                'valor_max'       => $f->valor_max,
-                'probabilidade'   => $f->probabilidade,
-                'severidade'      => $f->severidade,
-                'classificacao'   => $f->classificacao,
-            ])->values(),
-        ])->values();
+        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
+        $avaliacoes = $risco->avaliacoes()
+            ->with('avaliador')
+            ->latest('data_avaliacao')
+            ->paginate(20);
 
-        return view('avaliacoes.create', compact('risco', 'agentesJson'));
+        return view('avaliacoes.index', compact('risco', 'avaliacoes'));
     }
 
-    public function store(AvaliacaoRiscoRequest $request, RiscoInventario $risco)
+    public function create(RiscoInventario $risco): View
     {
-        $data = $request->validated();
+        Gate::authorize('create', [AvaliacaoRisco::class, $risco]);
 
-        $nivel = $data['probabilidade'] * $data['severidade'];
+        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
 
-        $avaliacao = $risco->avaliacoes()->create([
-            ...$data,
-            'nivel_risco'   => $nivel,
-            'classificacao' => AvaliacaoRisco::classificar($nivel),
-            'metodologia'   => $data['metodologia'] ?? 'Matriz 5x5 (P x S)',
-            'avaliado_por'  => auth()->id(),
-        ]);
+        // Pré-preenche probabilidade/severidade do inventário se existirem
+        $defaults = [
+            'probabilidade' => $risco->probabilidade_calculada,
+            'severidade'    => $risco->severidade_calculada,
+        ];
 
-        return redirect()->route('avaliacoes.show', $avaliacao)
-            ->with('success', 'Avaliação registrada.');
+        return view('avaliacoes.create', compact('risco', 'defaults'));
     }
 
-    public function show(AvaliacaoRisco $avaliacao)
+    public function store(AvaliacaoRiscoRequest $request, RiscoInventario $risco): RedirectResponse
     {
-        $avaliacao->load(['riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo', 'planosAcao', 'avaliador']);
-        return view('avaliacoes.show', compact('avaliacao'));
+        Gate::authorize('create', [AvaliacaoRisco::class, $risco]);
+
+        $dados = $request->validated();
+        $dados['risco_inventario_id'] = $risco->id;
+
+        // Calcula nivel_risco e classificação automaticamente
+        $dados['nivel_risco']    = $dados['probabilidade'] * $dados['severidade'];
+        $dados['classificacao']  = AvaliacaoRisco::classificar($dados['nivel_risco']);
+
+        // Registra o avaliador
+        $dados['avaliado_por'] = auth()->id();
+
+        AvaliacaoRisco::create($dados);
+
+        return redirect()->route('riscos.show', $risco)
+            ->with('success', 'Avaliação registrada com sucesso.');
     }
 
-    public function edit(AvaliacaoRisco $avaliacao)
+    public function show(RiscoInventario $risco, AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao->load(['riscoInventario.riscoTipo.agentesQuantitativos.faixas']);
+        Gate::authorize('view', $avaliacao);
 
-        $agentesJson = $avaliacao->riscoInventario->riscoTipo->agentesQuantitativos->map(fn ($ag) => [
-            'id'                => $ag->id,
-            'nome'              => $ag->nome,
-            'unidade_medida'    => $ag->unidade_medida,
-            'campo_label'       => $ag->campo_label,
-            'nivel_acao'        => $ag->nivel_acao,
-            'limite_tolerancia' => $ag->limite_tolerancia,
-            'input_step'        => $ag->input_step ?? '0.1',
-            'faixas'            => $ag->faixas->map(fn ($f) => [
-                'valor_min'       => $f->valor_min,
-                'valor_max'       => $f->valor_max,
-                'probabilidade'   => $f->probabilidade,
-                'severidade'      => $f->severidade,
-                'classificacao'   => $f->classificacao,
-            ])->values(),
-        ])->values();
+        $avaliacao->load(['riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo', 'avaliador', 'planosAcao']);
 
-        return view('avaliacoes.edit', compact('avaliacao', 'agentesJson'));
+        return view('avaliacoes.show', compact('risco', 'avaliacao'));
     }
 
-    public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao)
+    public function edit(RiscoInventario $risco, AvaliacaoRisco $avaliacao): View
     {
-        $data = $request->validated();
-        $nivel = $data['probabilidade'] * $data['severidade'];
+        Gate::authorize('update', $avaliacao);
 
-        $avaliacao->update([
-            ...$data,
-            'nivel_risco'   => $nivel,
-            'classificacao' => AvaliacaoRisco::classificar($nivel),
-            'metodologia'   => $data['metodologia'] ?? 'Matriz 5x5 (P x S)',
-        ]);
+        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
 
-        return redirect()->route('avaliacoes.show', $avaliacao)
+        return view('avaliacoes.edit', compact('risco', 'avaliacao'));
+    }
+
+    public function update(AvaliacaoRiscoRequest $request, RiscoInventario $risco, AvaliacaoRisco $avaliacao): RedirectResponse
+    {
+        Gate::authorize('update', $avaliacao);
+
+        $dados = $request->validated();
+        $dados['nivel_risco']   = $dados['probabilidade'] * $dados['severidade'];
+        $dados['classificacao'] = AvaliacaoRisco::classificar($dados['nivel_risco']);
+
+        $avaliacao->update($dados);
+
+        return redirect()->route('riscos.avaliacoes.show', [$risco, $avaliacao])
             ->with('success', 'Avaliação atualizada.');
     }
 
-    public function destroy(AvaliacaoRisco $avaliacao)
+    public function destroy(RiscoInventario $risco, AvaliacaoRisco $avaliacao): RedirectResponse
     {
-        $riscoId = $avaliacao->risco_inventario_id;
+        Gate::authorize('delete', $avaliacao);
+
         $avaliacao->delete();
-        return redirect()->route('riscos.show', $riscoId)
+
+        return redirect()->route('riscos.show', $risco)
             ->with('success', 'Avaliação removida.');
     }
 }

@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\AvaliacaoRisco;
 use App\Models\EmpresaElaboradora;
 use App\Models\Ghe;
 use App\Models\RiscoInventario;
 use App\Models\Setor;
 use App\Models\Unidade;
+use App\Policies\AvaliacaoRiscoPolicy;
 use App\Policies\EmpresaElaboradoraPolicy;
 use App\Policies\GhePolicy;
 use App\Policies\RiscoInventarioPolicy;
@@ -26,5 +28,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Setor::class, SetorPolicy::class);
         Gate::policy(Ghe::class, GhePolicy::class);
         Gate::policy(RiscoInventario::class, RiscoInventarioPolicy::class);
+        Gate::policy(AvaliacaoRisco::class, AvaliacaoRiscoPolicy::class);
     }
 }
