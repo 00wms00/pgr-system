@@ -17,7 +17,7 @@ class SetorPolicy
         $setor->loadMissing('unidade');
 
         return $setor->unidade !== null
-            && $user->empresa_id === $setor->unidade->empresa_id;
+            && (int) $user->empresa_id === (int) $setor->unidade->empresa_id;
     }
 
     public function create(User $user): bool
@@ -31,7 +31,7 @@ class SetorPolicy
 
         return $user->canWrite()
             && $setor->unidade !== null
-            && $user->empresa_id === $setor->unidade->empresa_id;
+            && (int) $user->empresa_id === (int) $setor->unidade->empresa_id;
     }
 
     public function delete(User $user, Setor $setor): bool
@@ -40,6 +40,6 @@ class SetorPolicy
 
         return $user->canWrite()
             && $setor->unidade !== null
-            && $user->empresa_id === $setor->unidade->empresa_id;
+            && (int) $user->empresa_id === (int) $setor->unidade->empresa_id;
     }
 }
