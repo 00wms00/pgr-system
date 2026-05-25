@@ -17,10 +17,11 @@ class PlanoAcaoRequest extends FormRequest
         return [
             'avaliacao_risco_id' => ['required', 'integer', Rule::exists('avaliacoes_risco', 'id')],
             'tipo_controle'      => ['required', 'string', Rule::in(array_keys(\App\Models\PlanoAcao::TIPOS_CONTROLE))],
-            'descricao'          => ['required', 'string'],
+            'descricao'          => ['required', 'string', 'max:2000'],
             'responsavel'        => ['required', 'string', 'max:255'],
-            'prazo'              => ['required', 'date', 'after_or_equal:today'],
+            'prazo'              => ['required', 'date'],
             'status'             => ['required', Rule::in(array_keys(\App\Models\PlanoAcao::STATUS))],
+            'observacao'         => ['nullable', 'string', 'max:2000'],
         ];
     }
 

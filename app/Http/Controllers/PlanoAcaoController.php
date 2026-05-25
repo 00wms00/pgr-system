@@ -10,15 +10,20 @@ class PlanoAcaoController extends Controller
 {
     public function create(AvaliacaoRisco $avaliacao)
     {
-        $avaliacao->load(['riscoInventario.riscoTipo', 'riscoInventario.ghe']);
+        $avaliacao->load([
+            'riscoInventario.riscoTipo',
+            'riscoInventario.ghe',
+        ]);
         return view('planos.create', compact('avaliacao'));
     }
 
     public function store(PlanoAcaoRequest $request)
     {
-        $plano = PlanoAcao::create($request->validated());
-        return redirect()->route('avaliacoes.show', $plano->avaliacao_risco_id)
-            ->with('success', 'Plano de ação criado.');
+        PlanoAcao::create($request->validated());
+
+        return redirect()
+            ->route('avaliacoes.show', $request->avaliacao_risco_id)
+            ->with('success', 'Plano de ação criado com sucesso.');
     }
 
     public function edit(PlanoAcao $plano)
@@ -30,7 +35,9 @@ class PlanoAcaoController extends Controller
     public function update(PlanoAcaoRequest $request, PlanoAcao $plano)
     {
         $plano->update($request->validated());
-        return redirect()->route('avaliacoes.show', $plano->avaliacao_risco_id)
+
+        return redirect()
+            ->route('avaliacoes.show', $plano->avaliacao_risco_id)
             ->with('success', 'Plano de ação atualizado.');
     }
 
@@ -38,7 +45,9 @@ class PlanoAcaoController extends Controller
     {
         $avaliacaoId = $plano->avaliacao_risco_id;
         $plano->delete();
-        return redirect()->route('avaliacoes.show', $avaliacaoId)
+
+        return redirect()
+            ->route('avaliacoes.show', $avaliacaoId)
             ->with('success', 'Plano de ação removido.');
     }
 }

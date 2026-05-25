@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class PlanoAcao extends Model
 {
@@ -17,6 +16,7 @@ class PlanoAcao extends Model
         'responsavel',
         'prazo',
         'status',
+        'observacao',
     ];
 
     protected $casts = [
@@ -24,26 +24,28 @@ class PlanoAcao extends Model
     ];
 
     const TIPOS_CONTROLE = [
-        'eliminacao'   => 'Eliminação',
-        'substituicao' => 'Substituição',
-        'engenharia'   => 'Controle de Engenharia',
-        'administrativo' => 'Controle Administrativo',
-        'epi'          => 'EPI',
+        'eliminacao'     => '1. Eliminação',
+        'substituicao'   => '2. Substituição',
+        'engenharia'     => '3. Controle de Engenharia',
+        'administrativo' => '4. Controle Administrativo',
+        'epi'            => '5. EPI',
     ];
 
     const STATUS = [
-        'pendente'      => 'Pendente',
-        'em_andamento'  => 'Em andamento',
-        'concluido'     => 'Concluído',
+        'pendente'     => 'Pendente',
+        'em_andamento' => 'Em andamento',
+        'concluido'    => 'Concluído',
+    ];
+
+    // Cores para inline styles (evita purge do Tailwind)
+    const STATUS_CORES = [
+        'pendente'     => ['bg' => '#e5e7eb', 'text' => '#374151'],
+        'em_andamento' => ['bg' => '#bfdbfe', 'text' => '#1e3a8a'],
+        'concluido'    => ['bg' => '#bbf7d0', 'text' => '#14532d'],
     ];
 
     public function avaliacaoRisco(): BelongsTo
     {
         return $this->belongsTo(AvaliacaoRisco::class);
-    }
-
-    public function epis(): BelongsToMany
-    {
-        return $this->belongsToMany(EpiCa::class, 'epi_plano_acao', 'plano_acao_id', 'epi_ca_id');
     }
 }
