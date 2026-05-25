@@ -1,19 +1,27 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Novo Usuário</h2>
-    </x-slot>
-    <div class="py-6">
-        <div class="max-w-2xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow sm:rounded-lg p-6">
-                <form method="POST" action="{{ route('admin.usuarios.store') }}">
-                    @csrf
-                    @include('admin.usuarios._form')
-                    <div class="flex justify-end gap-3 mt-6">
-                        <a href="{{ route('admin.usuarios.index') }}" class="px-4 py-2 rounded-md border">Cancelar</a>
-                        <x-primary-button>Criar usuário</x-primary-button>
-                    </div>
-                </form>
-            </div>
-        </div>
+@extends('layouts.app')
+@section('titulo', 'Novo Usuário')
+
+@section('conteudo')
+<div style="max-width:640px">
+    <div style="margin-bottom:20px">
+        <a href="{{ route('admin.usuarios.index') }}"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:#64748b;text-decoration:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Voltar
+        </a>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:8px 0 0">Novo Usuário</h2>
     </div>
-</x-app-layout>
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:24px">
+        <form method="POST" action="{{ route('admin.usuarios.store') }}">
+            @csrf
+            @include('admin.usuarios._form')
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9">
+                <button type="submit"
+                    style="background:#3b82f6;color:#fff;padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:600;border:none;cursor:pointer">Criar Usuário</button>
+                <a href="{{ route('admin.usuarios.index') }}"
+                    style="padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:500;color:#475569;background:#f1f5f9;text-decoration:none">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

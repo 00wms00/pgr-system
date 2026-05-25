@@ -3,12 +3,16 @@
 namespace App\Providers;
 
 use App\Models\AvaliacaoRisco;
+use App\Models\Empresa;
 use App\Models\EmpresaElaboradora;
 use App\Models\Ghe;
 use App\Models\PlanoAcao;
 use App\Models\RiscoInventario;
 use App\Models\Setor;
 use App\Models\Unidade;
+use App\Models\User;
+use App\Policies\Admin\EmpresaPolicy;
+use App\Policies\Admin\UsuarioPolicy;
 use App\Policies\AvaliacaoRiscoPolicy;
 use App\Policies\EmpresaElaboradoraPolicy;
 use App\Policies\GhePolicy;
@@ -25,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Domínio PGR
         Gate::policy(EmpresaElaboradora::class, EmpresaElaboradoraPolicy::class);
         Gate::policy(Unidade::class, UnidadePolicy::class);
         Gate::policy(Setor::class, SetorPolicy::class);
@@ -32,5 +37,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(RiscoInventario::class, RiscoInventarioPolicy::class);
         Gate::policy(AvaliacaoRisco::class, AvaliacaoRiscoPolicy::class);
         Gate::policy(PlanoAcao::class, PlanoAcaoPolicy::class);
+
+        // Admin
+        Gate::policy(User::class, UsuarioPolicy::class);
+        Gate::policy(Empresa::class, EmpresaPolicy::class);
     }
 }

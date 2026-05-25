@@ -1,27 +1,70 @@
-<div class="space-y-5">
+{{-- Requer: nada. Opcional: $empresa (para editar) --}}
+<div style="display:grid;gap:18px">
+
+    {{-- Razão Social --}}
     <div>
-        <x-input-label for="razao_social" value="Razão Social" />
-        <x-text-input id="razao_social" name="razao_social" type="text" class="mt-1 block w-full" :value="old('razao_social', $empresa->razao_social ?? '')" required />
-        <x-input-error :messages="$errors->get('razao_social')" class="mt-2" />
+        <label for="razao_social" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Razão Social <span style="color:#ef4444">*</span>
+        </label>
+        <input type="text" id="razao_social" name="razao_social" required maxlength="255"
+            value="{{ old('razao_social', $empresa->razao_social ?? '') }}"
+            style="width:100%;padding:8px 12px;border:1px solid {{ $errors->has('razao_social') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b">
+        @error('razao_social')<p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>@enderror
     </div>
+
+    {{-- Nome Fantasia --}}
     <div>
-        <x-input-label for="nome_fantasia" value="Nome Fantasia" />
-        <x-text-input id="nome_fantasia" name="nome_fantasia" type="text" class="mt-1 block w-full" :value="old('nome_fantasia', $empresa->nome_fantasia ?? '')" />
-        <x-input-error :messages="$errors->get('nome_fantasia')" class="mt-2" />
+        <label for="nome_fantasia" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Nome Fantasia
+        </label>
+        <input type="text" id="nome_fantasia" name="nome_fantasia" maxlength="255"
+            value="{{ old('nome_fantasia', $empresa->nome_fantasia ?? '') }}"
+            style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:.85rem;color:#1e293b">
     </div>
+
+    {{-- CNPJ --}}
     <div>
-        <x-input-label for="cnpj" value="CNPJ" />
-        <x-text-input id="cnpj" name="cnpj" type="text" class="mt-1 block w-full font-mono" placeholder="00.000.000/0001-00" :value="old('cnpj', $empresa->cnpj ?? '')" required />
-        <x-input-error :messages="$errors->get('cnpj')" class="mt-2" />
+        <label for="cnpj" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            CNPJ <span style="color:#ef4444">*</span>
+            <span style="font-size:.72rem;font-weight:400;color:#94a3b8">formato: 00.000.000/0000-00</span>
+        </label>
+        <input type="text" id="cnpj" name="cnpj" required maxlength="18" placeholder="00.000.000/0000-00"
+            value="{{ old('cnpj', $empresa->cnpj ?? '') }}"
+            style="width:100%;padding:8px 12px;border:1px solid {{ $errors->has('cnpj') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b;font-family:monospace"
+            oninput="mascaraCnpj(this)">
+        @error('cnpj')<p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>@enderror
     </div>
+
+    {{-- Endereço --}}
     <div>
-        <x-input-label for="endereco" value="Endereço" />
-        <x-text-input id="endereco" name="endereco" type="text" class="mt-1 block w-full" :value="old('endereco', $empresa->endereco ?? '')" />
-        <x-input-error :messages="$errors->get('endereco')" class="mt-2" />
+        <label for="endereco" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Endereço
+        </label>
+        <input type="text" id="endereco" name="endereco" maxlength="500"
+            value="{{ old('endereco', $empresa->endereco ?? '') }}"
+            style="width:100%;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:.85rem;color:#1e293b">
     </div>
-    <div class="flex items-center gap-3">
+
+    {{-- Ativo --}}
+    <div style="display:flex;align-items:center;gap:10px">
         <input type="hidden" name="ativo" value="0">
-        <input type="checkbox" id="ativo" name="ativo" value="1" class="rounded border-gray-300" {{ old('ativo', $empresa->ativo ?? true) ? 'checked' : '' }}>
-        <x-input-label for="ativo" value="Empresa ativa" />
+        <input type="checkbox" id="ativo" name="ativo" value="1"
+            @checked(old('ativo', $empresa->ativo ?? true))
+            style="width:16px;height:16px;cursor:pointer">
+        <label for="ativo" style="font-size:.85rem;font-weight:500;color:#374151;cursor:pointer">Empresa ativa</label>
     </div>
+
 </div>
+
+@push('scripts')
+<script>
+function mascaraCnpj(input) {
+    let v = input.value.replace(/\D/g, '').slice(0, 14);
+    if (v.length > 12) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
+    else if (v.length > 8) v = v.replace(/(\d{2})(\d{3})(\d{3})(\d{4})?/, (m, a, b, c, d) => `${a}.${b}.${c}${d ? '/' + d : ''}`);
+    else if (v.length > 5) v = v.replace(/(\d{2})(\d{3})(\d+)/, '$1.$2.$3');
+    else if (v.length > 2) v = v.replace(/(\d{2})(\d+)/, '$1.$2');
+    input.value = v;
+}
+</script>
+@endpush

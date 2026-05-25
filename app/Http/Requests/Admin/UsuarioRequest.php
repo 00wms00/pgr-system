@@ -11,22 +11,36 @@ class UsuarioRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check() && auth()->user()->isAdmin();
+        return true;
     }
 
     public function rules(): array
     {
-        $id = $this->route('usuario')?->id;
-        $creating = $this->isMethod('POST');
+        $usuario = $this->route('usuario'); // null no create
+        $isEdit  = $this->isMethod('PUT') || $this->isMethod('PATCH');
 
         return [
             'name'       => ['required', 'string', 'max:255'],
-            'email'      => ['required', 'email', Rule::unique('users', 'email')->ignore($id)],
-            'empresa_id' => ['required', 'integer', Rule::exists('empresas', 'id')],
+            'email'      => [
+                'required', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($usuario?->id),
+            ],
+            'password'   => $isEdit
+                ? ['nullable', 'confirmed', Password::min(8)]
+                : ['required', 'confirmed', Password::min(8)],
             'role'       => ['required', Rule::enum(UserRole::class)],
-            'password'   => $creating
-                ? ['required', Password::defaults()]
-                : ['nullable', Password::defaults()],
+            'empresa_id' => ['required', 'exists:empresas,id'],
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'name'       => 'nome',
+            'email'      => 'e-mail',
+            'password'   => 'senha',
+            'role'       => 'perfil',
+            'empresa_id' => 'empresa',
         ];
     }
 }

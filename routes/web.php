@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Admin\EmpresaController as AdminEmpresaController;
+use App\Http\Controllers\Admin\UsuarioController as AdminUsuarioController;
 use App\Http\Controllers\AvaliacaoRiscoController;
 use App\Http\Controllers\EmpresaElaboradoraController;
 use App\Http\Controllers\GheController;
@@ -53,9 +55,13 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 8 — Relatório PGR
     Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
 
-    // Admin — stubs nomeados sem controller (retornam 404 gracioso via menu desabilitado)
-    Route::get('/admin/usuarios', fn () => abort(404))->name('admin.usuarios.index');
-    Route::get('/admin/empresas', fn () => abort(404))->name('admin.empresas.index');
+    // Administração (somente Admin via Policy)
+    Route::prefix('admin')->name('admin.')->group(function () {
+        Route::resource('usuarios', AdminUsuarioController::class)
+            ->except(['show']);
+        Route::resource('empresas', AdminEmpresaController::class)
+            ->except(['show']);
+    });
 
     // Profile (Breeze)
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
