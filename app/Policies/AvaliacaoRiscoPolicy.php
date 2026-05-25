@@ -10,7 +10,9 @@ class AvaliacaoRiscoPolicy
 {
     /**
      * Sobe a hierarquia: AvaliacaoRisco → RiscoInventario → GHE → Setor → Unidade → empresa_id
-     * Usa loadMissing para evitar N+1 e trata cada elo nulo com segurança.
+     *
+     * ATENÇÃO: usa == (loose) e (int) cast para evitar falha por tipo
+     * quando empresa_id chega como string do banco em um lado e int no outro.
      */
     private function pertenceAEmpresa(User $user, AvaliacaoRisco $avaliacao): bool
     {
@@ -18,7 +20,8 @@ class AvaliacaoRiscoPolicy
 
         $unidade = optional(optional(optional($avaliacao->riscoInventario)->ghe)->setor)->unidade;
 
-        return $unidade !== null && $user->empresa_id === $unidade->empresa_id;
+        return $unidade !== null
+            && (int) $user->empresa_id === (int) $unidade->empresa_id;
     }
 
     private function riscoParteEmpresa(User $user, RiscoInventario $risco): bool
@@ -27,10 +30,10 @@ class AvaliacaoRiscoPolicy
 
         $unidade = optional(optional($risco->ghe)->setor)->unidade;
 
-        return $unidade !== null && $user->empresa_id === $unidade->empresa_id;
+        return $unidade !== null
+            && (int) $user->empresa_id === (int) $unidade->empresa_id;
     }
 
-    /** Qualquer usuário autenticado pode listar avaliações do próprio risco */
     public function viewAny(User $user, RiscoInventario $risco): bool
     {
         return $this->riscoParteEmpresa($user, $risco);
