@@ -19,4 +19,11 @@ class RiscoTipo extends Model
     {
         return $this->hasMany(RiscoInventario::class, 'risco_tipo_id');
     }
+
+    public function agentesQuantitativos(): HasMany
+    {
+        return $this->hasMany(AgenteQuantitativo::class, 'risco_tipo_id')
+            ->where('ativo', true)
+            ->orderBy('nome');
+    }
 }

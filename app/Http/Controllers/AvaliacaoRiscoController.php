@@ -10,8 +10,27 @@ class AvaliacaoRiscoController extends Controller
 {
     public function create(RiscoInventario $risco)
     {
-        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
-        return view('avaliacoes.create', compact('risco'));
+        $risco->load(['ghe.setor.unidade', 'riscoTipo.agentesQuantitativos.faixas']);
+
+        // Monta JSON de agentes para o Alpine.js
+        $agentesJson = $risco->riscoTipo->agentesQuantitativos->map(fn ($ag) => [
+            'id'                => $ag->id,
+            'nome'              => $ag->nome,
+            'unidade_medida'    => $ag->unidade_medida,
+            'campo_label'       => $ag->campo_label,
+            'nivel_acao'        => $ag->nivel_acao,
+            'limite_tolerancia' => $ag->limite_tolerancia,
+            'input_step'        => $ag->input_step ?? '0.1',
+            'faixas'            => $ag->faixas->map(fn ($f) => [
+                'valor_min'       => $f->valor_min,
+                'valor_max'       => $f->valor_max,
+                'probabilidade'   => $f->probabilidade,
+                'severidade'      => $f->severidade,
+                'classificacao'   => $f->classificacao,
+            ])->values(),
+        ])->values();
+
+        return view('avaliacoes.create', compact('risco', 'agentesJson'));
     }
 
     public function store(AvaliacaoRiscoRequest $request, RiscoInventario $risco)
@@ -40,8 +59,26 @@ class AvaliacaoRiscoController extends Controller
 
     public function edit(AvaliacaoRisco $avaliacao)
     {
-        $avaliacao->load(['riscoInventario.riscoTipo']);
-        return view('avaliacoes.edit', compact('avaliacao'));
+        $avaliacao->load(['riscoInventario.riscoTipo.agentesQuantitativos.faixas']);
+
+        $agentesJson = $avaliacao->riscoInventario->riscoTipo->agentesQuantitativos->map(fn ($ag) => [
+            'id'                => $ag->id,
+            'nome'              => $ag->nome,
+            'unidade_medida'    => $ag->unidade_medida,
+            'campo_label'       => $ag->campo_label,
+            'nivel_acao'        => $ag->nivel_acao,
+            'limite_tolerancia' => $ag->limite_tolerancia,
+            'input_step'        => $ag->input_step ?? '0.1',
+            'faixas'            => $ag->faixas->map(fn ($f) => [
+                'valor_min'       => $f->valor_min,
+                'valor_max'       => $f->valor_max,
+                'probabilidade'   => $f->probabilidade,
+                'severidade'      => $f->severidade,
+                'classificacao'   => $f->classificacao,
+            ])->values(),
+        ])->values();
+
+        return view('avaliacoes.edit', compact('avaliacao', 'agentesJson'));
     }
 
     public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao)
