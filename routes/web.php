@@ -16,26 +16,27 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard
     Route::get('/dashboard', function () {
         return redirect()->route('empresas-elaboradoras.index');
     })->name('dashboard');
 
-    // ── Sprint 1: Empresa Elaboradora ────────────────────────────────────
+    // Sprint 1: Empresa Elaboradora
     Route::resource('empresas-elaboradoras', EmpresaElaboradoraController::class);
 
-    // ── Sprint 2: Unidades ──────────────────────────────────────────
+    // Sprint 2: Unidades
     Route::resource('unidades', UnidadeController::class);
 
-    // ── Sprints futuras (stubs) ───────────────────────────────────
-    Route::get('/setores',       [SetorController::class,          'index'])->name('setores.index');
+    // Sprint 3: Setores
+    Route::resource('setores', SetorController::class);
+
+    // Sprints futuras (stubs)
     Route::get('/ghes',          [GheController::class,            'index'])->name('ghes.index');
     Route::get('/riscos',        [RiscoInventarioController::class,'index'])->name('riscos.index');
     Route::get('/relatorio/pgr', [RelatorioPgrController::class,   'index'])->name('relatorio.pgr');
     Route::get('/admin/usuarios',fn() => abort(501, 'Em desenvolvimento'))->name('admin.usuarios.index');
     Route::get('/admin/empresas', fn() => abort(501, 'Em desenvolvimento'))->name('admin.empresas.index');
 
-    // ── Profile (Breeze) ──────────────────────────────────────────
+    // Profile (Breeze)
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');

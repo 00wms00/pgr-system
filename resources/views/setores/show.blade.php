@@ -1,43 +1,70 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-xs text-gray-500 mb-1">
-                    <a href="{{ route('setores.index') }}" class="hover:text-blue-600">Setores</a>
-                    <span class="mx-1">›</span>
-                    <span>{{ $setor->nome }}</span>
-                </p>
-                <h2 class="text-xl font-semibold text-gray-800">{{ $setor->nome }}</h2>
-                <p class="text-sm text-gray-500">{{ $setor->unidade->nome }}</p>
-            </div>
-            <a href="{{ route('setores.edit', $setor) }}"
-               class="px-4 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200">
-                Editar
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200">
-                <div class="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="text-sm font-semibold text-gray-700">GHEs deste Setor</h3>
-                    <a href="{{ route('ghes.create') }}" class="text-xs text-blue-600 hover:underline">+ Novo GHE</a>
-                </div>
-                @forelse($setor->ghes as $ghe)
-                <div class="px-4 py-3 border-b border-gray-50 last:border-0 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium">{{ $ghe->nome }}</p>
-                        <p class="text-xs text-gray-500 font-mono">{{ $ghe->codigo }}</p>
-                    </div>
-                    <span class="text-xs px-2 py-1 rounded-full {{ $ghe->ativo ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-                        {{ $ghe->ativo ? 'Ativo' : 'Inativo' }}
-                    </span>
-                </div>
-                @empty
-                <div class="px-4 py-8 text-center text-sm text-gray-400">Nenhum GHE cadastrado.</div>
-                @endforelse
-            </div>
-        </div>
+@section('titulo', $setor->nome)
+
+@section('conteudo')
+<div style="max-width:800px">
+
+    {{-- Breadcrumb --}}
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:6px;font-size:.8rem;color:#64748b">
+        <a href="{{ route('setores.index') }}" style="color:#64748b;text-decoration:none">← Setores</a>
+        <span>/</span>
+        <a href="{{ route('unidades.show', $setor->unidade) }}" style="color:#3b82f6;text-decoration:none">
+            {{ $setor->unidade->nome }}
+        </a>
     </div>
-</x-app-layout>
+
+    {{-- Header --}}
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap">
+        <div>
+            <h2 style="font-size:1.2rem;font-weight:700;color:#1e293b;margin:0 0 2px">{{ $setor->nome }}</h2>
+            <p style="font-size:.8rem;color:#64748b;margin:0">
+                Unidade: <a href="{{ route('unidades.show', $setor->unidade) }}" style="color:#3b82f6;text-decoration:none">{{ $setor->unidade->nome }}</a>
+                @if($setor->descricao)
+                    &nbsp;&middot;&nbsp;{{ $setor->descricao }}
+                @endif
+            </p>
+        </div>
+        @can('update', $setor)
+        <a href="{{ route('setores.edit', $setor) }}"
+            style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#475569;padding:7px 14px;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none">
+            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            Editar
+        </a>
+        @endcan
+    </div>
+
+    {{-- GHEs --}}
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden">
+        <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9">
+            <h3 style="font-size:.9rem;font-weight:700;color:#1e293b;margin:0">
+                GHEs
+                <span style="font-size:.75rem;font-weight:500;color:#64748b;margin-left:6px">({{ $setor->ghes->count() }})</span>
+            </h3>
+        </div>
+        @if($setor->ghes->isEmpty())
+            <div style="padding:32px;text-align:center">
+                <p style="font-size:.85rem;color:#94a3b8;margin:0">Nenhum GHE cadastrado neste setor.</p>
+            </div>
+        @else
+            <table style="width:100%;border-collapse:collapse">
+                <thead>
+                    <tr style="background:#f8fafc">
+                        <th style="padding:9px 16px;text-align:left;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">GHE</th>
+                        <th style="padding:9px 16px;text-align:left;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">Descrição</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($setor->ghes as $ghe)
+                    <tr style="border-top:1px solid #f1f5f9">
+                        <td style="padding:10px 16px;font-size:.85rem;font-weight:600;color:#1e293b">{{ $ghe->nome }}</td>
+                        <td style="padding:10px 16px;font-size:.82rem;color:#64748b">{{ $ghe->descricao ?? '—' }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endif
+    </div>
+
+</div>
+@endsection
