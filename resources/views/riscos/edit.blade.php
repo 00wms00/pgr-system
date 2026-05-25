@@ -1,21 +1,35 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Editar Risco do Inventário</h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow sm:rounded-lg p-6">
-                <form method="POST" action="{{ route('riscos.update', $risco) }}" class="space-y-6">
-                    @csrf
-                    @method('PUT')
-                    @include('riscos._form')
-                    <div class="flex justify-end gap-3">
-                        <a href="{{ route('riscos.show', $risco) }}" class="px-4 py-2 rounded-md border">Cancelar</a>
-                        <x-primary-button>Salvar alterações</x-primary-button>
-                    </div>
-                </form>
-            </div>
-        </div>
+@section('titulo', 'Editar Risco')
+
+@section('conteudo')
+<div style="max-width:760px">
+    <div style="margin-bottom:20px">
+        <a href="{{ route('riscos.show', $risco) }}"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:#64748b;text-decoration:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Voltar para o Risco
+        </a>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:8px 0 2px">Editar Risco</h2>
+        <p style="font-size:.8rem;color:#64748b;margin:0">
+            {{ $risco->agente ?? $risco->fonte_geradora }} &mdash; GHE {{ $risco->ghe->nome }}
+        </p>
     </div>
-</x-app-layout>
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:24px">
+        <form method="POST" action="{{ route('riscos.update', $risco) }}">
+            @csrf @method('PUT')
+            @include('riscos._form')
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9">
+                <button type="submit"
+                    style="background:#3b82f6;color:#fff;padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:600;border:none;cursor:pointer">
+                    Salvar Alterações
+                </button>
+                <a href="{{ route('riscos.show', $risco) }}"
+                    style="padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:500;color:#475569;background:#f1f5f9;text-decoration:none">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection

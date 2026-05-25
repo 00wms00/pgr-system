@@ -32,7 +32,7 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 4: GHEs
     Route::resource('ghes', GheController::class);
 
-    // API auxiliar — retorna setores de uma unidade (para o select encadeado)
+    // API auxiliar — retorna setores de uma unidade (para o select encadeado no form GHE)
     Route::get('/api/unidades/{unidade}/setores', function (\App\Models\Unidade $unidade) {
         abort_unless(
             auth()->user()->empresa_id === $unidade->empresa_id,
@@ -43,11 +43,13 @@ Route::middleware(['auth'])->group(function () {
         );
     })->name('api.unidades.setores');
 
+    // Sprint 5: Riscos Inventário
+    Route::resource('riscos', RiscoInventarioController::class);
+
     // Sprints futuras (stubs)
-    Route::get('/riscos',        [RiscoInventarioController::class,'index'])->name('riscos.index');
-    Route::get('/relatorio/pgr', [RelatorioPgrController::class,   'index'])->name('relatorio.pgr');
-    Route::get('/admin/usuarios',fn() => abort(501, 'Em desenvolvimento'))->name('admin.usuarios.index');
-    Route::get('/admin/empresas', fn() => abort(501, 'Em desenvolvimento'))->name('admin.empresas.index');
+    Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
+    Route::get('/admin/usuarios', fn () => abort(501, 'Em desenvolvimento'))->name('admin.usuarios.index');
+    Route::get('/admin/empresas', fn () => abort(501, 'Em desenvolvimento'))->name('admin.empresas.index');
 
     // Profile (Breeze)
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
