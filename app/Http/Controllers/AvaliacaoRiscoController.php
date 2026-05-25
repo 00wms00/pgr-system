@@ -11,14 +11,6 @@ use Illuminate\View\View;
 
 class AvaliacaoRiscoController extends Controller
 {
-    /*
-     * Roteamento shallow:
-     *   Rotas aninhadas (index, create, store) → recebem RiscoInventario $risco
-     *   Rotas rasas     (show, edit, update, destroy) → recebem só AvaliacaoRisco $avaliacao
-     *
-     * A assinatura dos métodos DEVE refletir exatamente o que o Laravel injeta.
-     */
-
     public function index(RiscoInventario $risco): View
     {
         $risco->load(['ghe.setor.unidade', 'riscoTipo']);
@@ -65,10 +57,6 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação registrada com sucesso.');
     }
 
-    /**
-     * Rota shallow: GET /avaliacoes/{avaliacao}
-     * Laravel injeta APENAS AvaliacaoRisco — sem o RiscoInventario pai.
-     */
     public function show(AvaliacaoRisco $avaliacao): View
     {
         $avaliacao->load([
@@ -78,17 +66,23 @@ class AvaliacaoRiscoController extends Controller
             'planosAcao',
         ]);
 
+        // DEBUG TEMPORÁRIO — apagar após confirmar
+        $u = auth()->user();
+        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
+        dd([
+            'auth_id'            => $u?->id,
+            'auth_empresa_id'    => $u?->empresa_id,
+            'unidade_empresa_id' => $unidade?->empresa_id,
+            'match'              => (int)$u?->empresa_id === (int)$unidade?->empresa_id,
+        ]);
+
         Gate::authorize('view', $avaliacao);
 
-        // Passa $risco por conveniência para a view (breadcrumbs, links, etc.)
         $risco = $avaliacao->riscoInventario;
 
         return view('avaliacoes.show', compact('risco', 'avaliacao'));
     }
 
-    /**
-     * Rota shallow: GET /avaliacoes/{avaliacao}/edit
-     */
     public function edit(AvaliacaoRisco $avaliacao): View
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
@@ -101,9 +95,6 @@ class AvaliacaoRiscoController extends Controller
         return view('avaliacoes.edit', compact('risco', 'avaliacao'));
     }
 
-    /**
-     * Rota shallow: PUT /avaliacoes/{avaliacao}
-     */
     public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao): RedirectResponse
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
@@ -120,9 +111,6 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação atualizada.');
     }
 
-    /**
-     * Rota shallow: DELETE /avaliacoes/{avaliacao}
-     */
     public function destroy(AvaliacaoRisco $avaliacao): RedirectResponse
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
