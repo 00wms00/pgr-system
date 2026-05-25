@@ -11,13 +11,12 @@ use Illuminate\View\View;
 
 class AvaliacaoRiscoController extends Controller
 {
-    /**
-     * Avaliações são sempre contextualizadas dentro de um RiscoInventario.
-     * Rota: riscos.{risco}.avaliacoes.*  (nested resource)
+    /*
+     * Roteamento shallow:
+     *   Rotas aninhadas (index, create, store) → recebem RiscoInventario $risco
+     *   Rotas rasas     (show, edit, update, destroy) → recebem só AvaliacaoRisco $avaliacao
      *
-     * IMPORTANTE: o eager load da cadeia (riscoInventario.ghe.setor.unidade)
-     * deve ser feito ANTES de Gate::authorize(), pois a Policy usa loadMissing
-     * mas é mais eficiente já injetar o relacionamento carregado.
+     * A assinatura dos métodos DEVE refletir exatamente o que o Laravel injeta.
      */
 
     public function index(RiscoInventario $risco): View
@@ -66,26 +65,46 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação registrada com sucesso.');
     }
 
-    public function show(RiscoInventario $risco, AvaliacaoRisco $avaliacao): View
+    /**
+     * Rota shallow: GET /avaliacoes/{avaliacao}
+     * Laravel injeta APENAS AvaliacaoRisco — sem o RiscoInventario pai.
+     */
+    public function show(AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao->load(['riscoInventario.ghe.setor.unidade', 'riscoInventario.riscoTipo', 'avaliador', 'planosAcao']);
+        $avaliacao->load([
+            'riscoInventario.ghe.setor.unidade',
+            'riscoInventario.riscoTipo',
+            'avaliador',
+            'planosAcao',
+        ]);
 
         Gate::authorize('view', $avaliacao);
+
+        // Passa $risco por conveniência para a view (breadcrumbs, links, etc.)
+        $risco = $avaliacao->riscoInventario;
 
         return view('avaliacoes.show', compact('risco', 'avaliacao'));
     }
 
-    public function edit(RiscoInventario $risco, AvaliacaoRisco $avaliacao): View
+    /**
+     * Rota shallow: GET /avaliacoes/{avaliacao}/edit
+     */
+    public function edit(AvaliacaoRisco $avaliacao): View
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
-        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
 
         Gate::authorize('update', $avaliacao);
+
+        $risco = $avaliacao->riscoInventario;
+        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
 
         return view('avaliacoes.edit', compact('risco', 'avaliacao'));
     }
 
-    public function update(AvaliacaoRiscoRequest $request, RiscoInventario $risco, AvaliacaoRisco $avaliacao): RedirectResponse
+    /**
+     * Rota shallow: PUT /avaliacoes/{avaliacao}
+     */
+    public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao): RedirectResponse
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
 
@@ -97,16 +116,20 @@ class AvaliacaoRiscoController extends Controller
 
         $avaliacao->update($dados);
 
-        return redirect()->route('riscos.avaliacoes.show', [$risco, $avaliacao])
+        return redirect()->route('avaliacoes.show', $avaliacao)
             ->with('success', 'Avaliação atualizada.');
     }
 
-    public function destroy(RiscoInventario $risco, AvaliacaoRisco $avaliacao): RedirectResponse
+    /**
+     * Rota shallow: DELETE /avaliacoes/{avaliacao}
+     */
+    public function destroy(AvaliacaoRisco $avaliacao): RedirectResponse
     {
         $avaliacao->load(['riscoInventario.ghe.setor.unidade']);
 
         Gate::authorize('delete', $avaliacao);
 
+        $risco = $avaliacao->riscoInventario;
         $avaliacao->delete();
 
         return redirect()->route('riscos.show', $risco)

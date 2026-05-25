@@ -57,12 +57,10 @@
 .dash-wrapper { max-width: 1180px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
 .dash-empresa { font-size: .8rem; color: #94a3b8; font-weight: 500; letter-spacing: .02em; }
 
-/* Alertas */
 .dash-alert { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; border: 1px solid; font-size: .83rem; font-weight: 500; }
 .dash-alert-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
 .dash-alert-warn   { background: #fffbeb; border-color: #fde68a; color: #92400e; }
 
-/* KPIs */
 .dash-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
 .dash-kpi {
     display: flex; align-items: center; gap: 16px;
@@ -78,12 +76,10 @@
 .dash-kpi-value { font-size: 1.9rem; font-weight: 800; line-height: 1; }
 .dash-kpi-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: #94a3b8; }
 
-/* Charts row */
 .dash-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
 .dash-card { background: #fff; border: 1px solid #f1f5f9; border-radius: 12px; padding: 22px; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
 .dash-card-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin-bottom: 18px; }
 
-/* Barras */
 .cls-row { display: flex; flex-direction: column; gap: 13px; }
 .cls-item { display: flex; flex-direction: column; gap: 5px; }
 .cls-meta { display: flex; justify-content: space-between; align-items: center; }
@@ -92,7 +88,6 @@
 .cls-track { height: 8px; background: #f1f5f9; border-radius: 99px; overflow: hidden; }
 .cls-fill { height: 100%; border-radius: 99px; transition: width .6s cubic-bezier(.16,1,.3,1); }
 
-/* Donut */
 .donut-wrap { display: flex; align-items: center; gap: 24px; }
 .donut-legend { display: flex; flex-direction: column; gap: 10px; flex: 1; }
 .donut-legend-item { display: flex; align-items: center; gap: 8px; font-size: .8rem; }
@@ -100,7 +95,6 @@
 .donut-lbl { color: #475569; flex: 1; }
 .donut-val { font-weight: 700; color: #1e293b; font-variant-numeric: tabular-nums; }
 
-/* Tabelas inferiores */
 .dash-tables { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
 .dash-list { display: flex; flex-direction: column; gap: 8px; }
 .dash-list-item {
@@ -119,7 +113,6 @@
 .dash-empty svg { margin: 0 auto 8px; }
 .dash-empty p { font-size: .78rem; color: #94a3b8; }
 
-/* Dias vencimento */
 .dias-ok      { font-size: .75rem; font-weight: 700; color: #475569; }
 .dias-warn    { font-size: .75rem; font-weight: 700; color: #d97706; }
 .dias-atraso  { font-size: .75rem; font-weight: 700; color: #dc2626; }
@@ -134,10 +127,8 @@
 
 <div class="dash-wrapper">
 
-    {{-- Empresa --}}
     <p class="dash-empresa">{{ auth()->user()->empresa->nome ?? '' }} &mdash; Visão geral do PGR</p>
 
-    {{-- Alertas --}}
     @if($planosAtrasados > 0)
     <div class="dash-alert dash-alert-danger">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
@@ -170,7 +161,6 @@
     {{-- Gráficos --}}
     <div class="dash-charts">
 
-        {{-- Barras: Riscos por classificação --}}
         <div class="dash-card">
             <p class="dash-card-title">Riscos por Classificação</p>
             @if($totalAvaliacoes === 0)
@@ -196,7 +186,6 @@
             @endif
         </div>
 
-        {{-- Donut: Planos por status --}}
         <div class="dash-card">
             <p class="dash-card-title">Planos por Status</p>
             @if($totalPlanosStatus === 0)
@@ -245,7 +234,6 @@
     {{-- Tabelas inferiores --}}
     <div class="dash-tables">
 
-        {{-- Críticos sem plano --}}
         <div class="dash-card">
             <p class="dash-card-title">Riscos Críticos/Altos sem Plano</p>
             @if($riscosSemPlano->isEmpty())
@@ -267,6 +255,7 @@
                                     <span class="dash-badge" style="background:{{ $cc['bg'] }};color:{{ $cc['text'] }}">{{ $cc['label'] }}</span>
                                 @endif
                                 @if($av)
+                                    {{-- rota shallow: avaliacoes.show recebe só o id da avaliação --}}
                                     <a href="{{ route('avaliacoes.show', $av->id) }}" class="dash-link">Ver &rarr;</a>
                                 @endif
                             </div>
@@ -276,7 +265,6 @@
             @endif
         </div>
 
-        {{-- Próximos planos --}}
         <div class="dash-card">
             <p class="dash-card-title">Próximos Planos a Vencer</p>
             @if($proximosPlanos->isEmpty())
