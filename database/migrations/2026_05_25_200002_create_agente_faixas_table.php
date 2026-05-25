@@ -11,7 +11,8 @@ return new class extends Migration
         Schema::create('agente_faixas', function (Blueprint $table) {
             $table->id();
             $table->foreignId('agente_quantitativo_id')
-                  ->constrained()->cascadeOnDelete();
+                  ->constrained('agentes_quantitativos')
+                  ->cascadeOnDelete();
             $table->decimal('valor_min', 8, 2);
             $table->decimal('valor_max', 8, 2)->nullable();
             $table->unsignedTinyInteger('probabilidade');
