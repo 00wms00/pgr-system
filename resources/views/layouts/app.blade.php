@@ -100,13 +100,24 @@
     ================================================================ --}}
     <div style="flex:1;margin-left:240px;min-width:0;display:flex;flex-direction:column">
 
-        {{-- Topbar --}}
+        {{-- Topbar
+             Suporta duas formas:
+             1) <x-slot name="header"> ... </x-slot>  (componente Blade)
+             2) @section('header_actions') ... @endsection  (legado @yield)
+        --}}
         <header style="background:#fff;border-bottom:1px solid #e2e8f0;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:30">
-            <h1 style="font-size:.95rem;font-weight:600;color:#1e293b">@yield('titulo', 'Dashboard')</h1>
-            <div style="display:flex;align-items:center;gap:12px">
-                @yield('header_actions')
-                <span style="font-size:.75rem;color:#94a3b8">{{ now()->format('d/m/Y') }}</span>
-            </div>
+            @if(isset($header))
+                {{-- slot 'header' vindo de <x-slot name="header"> --}}
+                <div style="display:flex;align-items:center;justify-content:space-between;width:100%">
+                    {{ $header }}
+                </div>
+            @else
+                <h1 style="font-size:.95rem;font-weight:600;color:#1e293b">@yield('titulo', 'Dashboard')</h1>
+                <div style="display:flex;align-items:center;gap:12px">
+                    @yield('header_actions')
+                    <span style="font-size:.75rem;color:#94a3b8">{{ now()->format('d/m/Y') }}</span>
+                </div>
+            @endif
         </header>
 
         {{-- Content --}}
