@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\EmpresaController as AdminEmpresaController;
 use App\Http\Controllers\Admin\UsuarioController as AdminUsuarioController;
 use App\Http\Controllers\AvaliacaoRiscoController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaElaboradoraController;
 use App\Http\Controllers\GheController;
 use App\Http\Controllers\PlanoAcaoController;
@@ -19,9 +20,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    Route::get('/dashboard', function () {
-        return redirect()->route('empresas-elaboradoras.index');
-    })->name('dashboard');
+    // Dashboard principal
+    Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // Sprint 1 — Empresa Elaboradora
     Route::resource('empresas-elaboradoras', EmpresaElaboradoraController::class);
