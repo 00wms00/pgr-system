@@ -50,12 +50,12 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 7 — Planos de Ação (nested em avaliações + shallow)
     Route::resource('avaliacoes.planos', PlanoAcaoController::class)->shallow();
 
-    // Sprint 8 — Relatório PGR (stub)
+    // Sprint 8 — Relatório PGR
     Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
 
-    // Admin (stubs)
-    Route::get('/admin/usuarios', fn () => abort(501, 'Em desenvolvimento'))->name('admin.usuarios.index');
-    Route::get('/admin/empresas', fn () => abort(501, 'Em desenvolvimento'))->name('admin.empresas.index');
+    // Admin — stubs nomeados sem controller (retornam 404 gracioso via menu desabilitado)
+    Route::get('/admin/usuarios', fn () => abort(404))->name('admin.usuarios.index');
+    Route::get('/admin/empresas', fn () => abort(404))->name('admin.empresas.index');
 
     // Profile (Breeze)
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');

@@ -49,11 +49,11 @@
                     ['label' => 'Inventário de Riscos', 'route' => 'riscos.index', 'icon' => 'M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z'],
                     ['label' => 'Relatório PGR',       'route' => 'relatorio.pgr', 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
                 ];
-                if (auth()->user()->isAdmin()) {
-                    $nav[] = ['group' => 'Administração'];
-                    $nav[] = ['label' => 'Usuários', 'route' => 'admin.usuarios.index', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'];
-                    $nav[] = ['label' => 'Empresas',  'route' => 'admin.empresas.index', 'icon' => 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'];
-                }
+                // Links de admin — em desenvolvimento: exibidos mas visuamente desabilitados
+                $adminLinks = [
+                    ['label' => 'Usuários', 'icon' => 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z'],
+                    ['label' => 'Empresas',  'icon' => 'M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
+                ];
             @endphp
 
             @foreach($nav as $item)
@@ -72,6 +72,21 @@
                     </a>
                 @endif
             @endforeach
+
+            {{-- Admin: exibe somente para isAdmin(), links desabilitados até implementação --}}
+            @if(auth()->user()->isAdmin())
+                <p style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#475569;padding:14px 10px 4px">Administração</p>
+                @foreach($adminLinks as $item)
+                <span title="Em desenvolvimento"
+                    style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;font-size:.82rem;font-weight:500;color:#475569;cursor:not-allowed;margin-bottom:1px;user-select:none">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;opacity:.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item['icon'] }}"/>
+                    </svg>
+                    <span style="opacity:.5">{{ $item['label'] }}</span>
+                    <span style="margin-left:auto;font-size:.6rem;background:#334155;color:#64748b;padding:1px 6px;border-radius:4px;font-weight:600">em breve</span>
+                </span>
+                @endforeach
+            @endif
         </nav>
 
         {{-- User footer --}}
