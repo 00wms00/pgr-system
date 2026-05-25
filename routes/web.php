@@ -15,13 +15,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile',    [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Relatório PGR (leitura — todos os perfis autenticados)
+    Route::get('/relatorio/pgr', [\App\Http\Controllers\RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
 });
 
 // ----------------------------------------------------------------
 // Escrita — admin e gestor
 // ----------------------------------------------------------------
 Route::middleware(['auth', 'role:admin,gestor'])->group(function () {
-    // parameters() força o nome correto do parâmetro (Laravel usa inglês para singularizar)
     Route::resource('unidades', \App\Http\Controllers\UnidadeController::class)
          ->parameters(['unidades' => 'unidade']);
 
