@@ -14,7 +14,6 @@ class AvaliacaoRiscoController extends Controller
     public function index(RiscoInventario $risco): View
     {
         $risco->load(['ghe.setor.unidade', 'riscoTipo']);
-
         Gate::authorize('viewAny', [AvaliacaoRisco::class, $risco]);
 
         $avaliacoes = $risco->avaliacoes()
@@ -28,7 +27,6 @@ class AvaliacaoRiscoController extends Controller
     public function create(RiscoInventario $risco): View
     {
         $risco->load(['ghe.setor.unidade', 'riscoTipo']);
-
         Gate::authorize('create', [AvaliacaoRisco::class, $risco]);
 
         $defaults = [
@@ -42,7 +40,6 @@ class AvaliacaoRiscoController extends Controller
     public function store(AvaliacaoRiscoRequest $request, RiscoInventario $risco): RedirectResponse
     {
         $risco->load(['ghe.setor.unidade']);
-
         Gate::authorize('create', [AvaliacaoRisco::class, $risco]);
 
         $dados = $request->validated();
@@ -59,50 +56,65 @@ class AvaliacaoRiscoController extends Controller
 
     /**
      * Rota shallow: GET /avaliacoes/{avaliacao}
-     *
-     * Usa fresh() antes do load() para garantir que nenhum relacionamento
-     * parcial em cache (vindo de eager loads anteriores na mesma requisição)
-     * impeça o carregamento completo da hierarquia necessária para a Policy.
+     * Autorização manual via abort_unless para evitar problemas de cache
+     * de relacionamentos no Gate::authorize.
      */
     public function show(AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao = $avaliacao->fresh([
+        // Busca fresh do banco para garantir hierarquia completa sem cache
+        $avaliacao = AvaliacaoRisco::with([
             'riscoInventario.ghe.setor.unidade',
             'riscoInventario.riscoTipo',
             'avaliador',
             'planosAcao',
-        ]);
+        ])->findOrFail($avaliacao->id);
 
-        Gate::authorize('view', $avaliacao);
+        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
+
+        abort_unless(
+            $unidade && (int) auth()->user()->empresa_id === (int) $unidade->empresa_id,
+            403
+        );
 
         $risco = $avaliacao->riscoInventario;
 
         return view('avaliacoes.show', compact('risco', 'avaliacao'));
     }
 
-    /**
-     * Rota shallow: GET /avaliacoes/{avaliacao}/edit
-     */
     public function edit(AvaliacaoRisco $avaliacao): View
     {
-        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = AvaliacaoRisco::with([
+            'riscoInventario.ghe.setor.unidade',
+            'riscoInventario.riscoTipo',
+        ])->findOrFail($avaliacao->id);
 
-        Gate::authorize('update', $avaliacao);
+        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
+        abort_unless(
+            auth()->user()->canWrite()
+            && $unidade
+            && (int) auth()->user()->empresa_id === (int) $unidade->empresa_id,
+            403
+        );
 
         $risco = $avaliacao->riscoInventario;
-        $risco->load(['ghe.setor.unidade', 'riscoTipo']);
+        $risco->load(['riscoTipo']);
 
         return view('avaliacoes.edit', compact('risco', 'avaliacao'));
     }
 
-    /**
-     * Rota shallow: PUT /avaliacoes/{avaliacao}
-     */
     public function update(AvaliacaoRiscoRequest $request, AvaliacaoRisco $avaliacao): RedirectResponse
     {
-        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = AvaliacaoRisco::with([
+            'riscoInventario.ghe.setor.unidade',
+        ])->findOrFail($avaliacao->id);
 
-        Gate::authorize('update', $avaliacao);
+        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
+        abort_unless(
+            auth()->user()->canWrite()
+            && $unidade
+            && (int) auth()->user()->empresa_id === (int) $unidade->empresa_id,
+            403
+        );
 
         $dados = $request->validated();
         $dados['nivel_risco']   = $dados['probabilidade'] * $dados['severidade'];
@@ -114,14 +126,19 @@ class AvaliacaoRiscoController extends Controller
             ->with('success', 'Avaliação atualizada.');
     }
 
-    /**
-     * Rota shallow: DELETE /avaliacoes/{avaliacao}
-     */
     public function destroy(AvaliacaoRisco $avaliacao): RedirectResponse
     {
-        $avaliacao = $avaliacao->fresh(['riscoInventario.ghe.setor.unidade']);
+        $avaliacao = AvaliacaoRisco::with([
+            'riscoInventario.ghe.setor.unidade',
+        ])->findOrFail($avaliacao->id);
 
-        Gate::authorize('delete', $avaliacao);
+        $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
+        abort_unless(
+            auth()->user()->canWrite()
+            && $unidade
+            && (int) auth()->user()->empresa_id === (int) $unidade->empresa_id,
+            403
+        );
 
         $risco = $avaliacao->riscoInventario;
         $avaliacao->delete();
