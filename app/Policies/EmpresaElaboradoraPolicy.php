@@ -2,46 +2,48 @@
 
 namespace App\Policies;
 
-use App\Enums\UserRole;
 use App\Models\EmpresaElaboradora;
 use App\Models\User;
-use Illuminate\Auth\Access\HandlesAuthorization;
 
 class EmpresaElaboradoraPolicy
 {
-    use HandlesAuthorization;
-
     /**
-     * Empresa Elaboradora é configuração global do sistema.
-     * Apenas administradores podem gerenciá-la.
+     * Apenas admin e gestor podem gerenciar empresas elaboradoras.
+     * Usuário comum só pode visualizar.
      */
-    private function isAdmin(User $user): bool
-    {
-        return $user->role === UserRole::Admin;
-    }
 
     public function viewAny(User $user): bool
     {
-        return $this->isAdmin($user);
+        return true;
     }
 
-    public function view(User $user, EmpresaElaboradora $elaboradora): bool
+    public function view(User $user, EmpresaElaboradora $empresaElaboradora): bool
     {
-        return $this->isAdmin($user);
+        return true;
     }
 
     public function create(User $user): bool
     {
-        return $this->isAdmin($user);
+        return in_array($user->role, ['admin', 'gestor']);
     }
 
-    public function update(User $user, EmpresaElaboradora $elaboradora): bool
+    public function update(User $user, EmpresaElaboradora $empresaElaboradora): bool
     {
-        return $this->isAdmin($user);
+        return in_array($user->role, ['admin', 'gestor']);
     }
 
-    public function delete(User $user, EmpresaElaboradora $elaboradora): bool
+    public function delete(User $user, EmpresaElaboradora $empresaElaboradora): bool
     {
-        return $this->isAdmin($user);
+        return $user->role === 'admin';
+    }
+
+    public function restore(User $user, EmpresaElaboradora $empresaElaboradora): bool
+    {
+        return $user->role === 'admin';
+    }
+
+    public function forceDelete(User $user, EmpresaElaboradora $empresaElaboradora): bool
+    {
+        return $user->role === 'admin';
     }
 }

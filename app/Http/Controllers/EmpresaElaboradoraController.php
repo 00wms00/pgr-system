@@ -2,76 +2,68 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\StoreEmpresaElaboradoraRequest;
-use App\Http\Requests\UpdateEmpresaElaboradoraRequest;
+use App\Http\Requests\EmpresaElaboradoraRequest;
 use App\Models\EmpresaElaboradora;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class EmpresaElaboradoraController extends Controller
 {
-    public function index()
+    public function __construct()
     {
-        $this->authorize('viewAny', EmpresaElaboradora::class);
-
-        $elaboradoras = EmpresaElaboradora::withCount('responsaveis')
-            ->orderBy('razao_social')
-            ->paginate(15);
-
-        return view('empresa_elaboradora.index', compact('elaboradoras'));
+        $this->authorizeResource(EmpresaElaboradora::class, 'empresa_elaboradora');
     }
 
-    public function create()
+    public function index(): View
     {
-        $this->authorize('create', EmpresaElaboradora::class);
+        $empresas = EmpresaElaboradora::orderBy('razao_social')->paginate(15);
 
-        return view('empresa_elaboradora.create');
+        return view('empresas-elaboradoras.index', compact('empresas'));
     }
 
-    public function store(StoreEmpresaElaboradoraRequest $request)
+    public function create(): View
     {
-        $elaboradora = EmpresaElaboradora::create($request->validated());
+        return view('empresas-elaboradoras.create');
+    }
+
+    public function store(EmpresaElaboradoraRequest $request): RedirectResponse
+    {
+        $empresa = EmpresaElaboradora::create($request->validated());
 
         return redirect()
-            ->route('empresa-elaboradora.show', $elaboradora)
+            ->route('empresas-elaboradoras.show', $empresa)
             ->with('success', 'Empresa elaboradora cadastrada com sucesso.');
     }
 
-    public function show(EmpresaElaboradora $empresaElaboradora)
+    public function show(EmpresaElaboradora $empresaElaboradora): View
     {
-        $this->authorize('view', $empresaElaboradora);
-
-        $empresaElaboradora->load('responsaveis');
-
-        return view('empresa_elaboradora.show', compact('empresaElaboradora'));
+        return view('empresas-elaboradoras.show', [
+            'empresa' => $empresaElaboradora,
+        ]);
     }
 
-    public function edit(EmpresaElaboradora $empresaElaboradora)
+    public function edit(EmpresaElaboradora $empresaElaboradora): View
     {
-        $this->authorize('update', $empresaElaboradora);
-
-        return view('empresa_elaboradora.edit', compact('empresaElaboradora'));
+        return view('empresas-elaboradoras.edit', [
+            'empresa' => $empresaElaboradora,
+        ]);
     }
 
-    public function update(UpdateEmpresaElaboradoraRequest $request, EmpresaElaboradora $empresaElaboradora)
+    public function update(EmpresaElaboradoraRequest $request, EmpresaElaboradora $empresaElaboradora): RedirectResponse
     {
         $empresaElaboradora->update($request->validated());
 
         return redirect()
-            ->route('empresa-elaboradora.show', $empresaElaboradora)
+            ->route('empresas-elaboradoras.show', $empresaElaboradora)
             ->with('success', 'Empresa elaboradora atualizada com sucesso.');
     }
 
-    public function destroy(EmpresaElaboradora $empresaElaboradora)
+    public function destroy(EmpresaElaboradora $empresaElaboradora): RedirectResponse
     {
-        $this->authorize('delete', $empresaElaboradora);
-
-        if ($empresaElaboradora->responsaveis()->exists()) {
-            return back()->with('error', 'Não é possível excluir: há responsáveis técnicos vinculados.');
-        }
-
         $empresaElaboradora->delete();
 
         return redirect()
-            ->route('empresa-elaboradora.index')
-            ->with('success', 'Empresa elaboradora removida.');
+            ->route('empresas-elaboradoras.index')
+            ->with('success', 'Empresa elaboradora removida com sucesso.');
     }
 }

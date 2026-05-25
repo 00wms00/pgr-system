@@ -1,0 +1,20 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex items-center gap-2 text-sm text-gray-500">
+            <a href="{{ route('empresas-elaboradoras.index') }}" class="hover:text-gray-700">Empresas Elaboradoras</a>
+            <span>/</span>
+            <a href="{{ route('empresas-elaboradoras.show', $empresa) }}" class="hover:text-gray-700">{{ $empresa->razao_social }}</a>
+            <span>/</span>
+            <span class="text-gray-800 font-medium">Editar</span>
+        </div>
+    </x-slot>
+
+    <div class="py-8">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <form action="{{ route('empresas-elaboradoras.update', $empresa) }}" method="POST" novalidate>
+                @csrf @method('PUT')
+                @include('empresas-elaboradoras._form')
+            </form>
+        </div>
+    </div>
+</x-app-layout>

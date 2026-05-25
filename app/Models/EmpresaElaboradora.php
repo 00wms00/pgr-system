@@ -2,18 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class EmpresaElaboradora extends Model
 {
-    protected $table = 'empresa_elaboradora';
+    use HasFactory, SoftDeletes;
+
+    protected $table = 'empresas_elaboradoras';
 
     protected $fillable = [
         'razao_social',
         'nome_fantasia',
         'cnpj',
-        'cnae_codigo',
+        'cnae_principal',
         'cnae_descricao',
         'logradouro',
         'numero',
@@ -25,6 +28,16 @@ class EmpresaElaboradora extends Model
         'telefone',
         'email',
         'site',
+        // Responsável técnico
+        'responsavel_nome',
+        'responsavel_formacao',
+        'responsavel_especializacao',
+        'responsavel_registro_tipo',  // CREA, CRBio, etc.
+        'responsavel_registro_numero',
+        'responsavel_rnp',
+        'responsavel_cpf',
+        'responsavel_nit',
+        'responsavel_cargo',          // Engenheiro de Segurança, Técnico de Segurança
         'ativo',
     ];
 
@@ -32,41 +45,43 @@ class EmpresaElaboradora extends Model
         'ativo' => 'boolean',
     ];
 
-    // ─── Relacionamentos ────────────────────────────────────────────────────────
-
-    public function responsaveis(): HasMany
-    {
-        return $this->hasMany(ResponsavelTecnico::class)->where('ativo', true);
-    }
-
-    public function todosResponsaveis(): HasMany
-    {
-        return $this->hasMany(ResponsavelTecnico::class);
-    }
-
-    // ─── Helpers ────────────────────────────────────────────────────────────────
+    // ── Relacionamentos ──────────────────────────────────────────────────────
 
     /**
-     * Retorna o endereço formatado em uma linha.
+     * Uma empresa elaboradora pode elaborar PGRs de várias empresas contratantes.
      */
-    public function enderecoFormatado(): string
+    public function empresas()
     {
-        $partes = [
-            $this->logradouro . ', ' . $this->numero,
+        return $this->hasMany(Empresa::class, 'empresa_elaboradora_id');
+    }
+
+    // ── Accessors ────────────────────────────────────────────────────────────
+
+    public function getCnpjFormatadoAttribute(): string
+    {
+        $cnpj = preg_replace('/\D/', '', $this->cnpj ?? '');
+        if (strlen($cnpj) === 14) {
+            return sprintf(
+                '%s.%s.%s/%s-%s',
+                substr($cnpj, 0, 2),
+                substr($cnpj, 2, 3),
+                substr($cnpj, 5, 3),
+                substr($cnpj, 8, 4),
+                substr($cnpj, 12, 2)
+            );
+        }
+        return $this->cnpj ?? '';
+    }
+
+    public function getEnderecoCompletoAttribute(): string
+    {
+        return implode(', ', array_filter([
+            $this->logradouro,
+            $this->numero,
             $this->complemento,
             $this->bairro,
-            $this->cidade . ' – ' . $this->uf,
-            'CEP: ' . $this->cep,
-        ];
-
-        return implode(', ', array_filter($partes));
-    }
-
-    /**
-     * Retorna o nome de exibição preferindo nome_fantasia.
-     */
-    public function nomeExibicao(): string
-    {
-        return $this->nome_fantasia ?? $this->razao_social;
+            $this->cidade . ' - ' . $this->uf,
+            'CEP ' . $this->cep,
+        ]));
     }
 }
