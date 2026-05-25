@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class AgenteQuantitativo extends Model
 {
+    // Laravel inferiria 'agente_quantitativos' — tabela real é 'agentes_quantitativos'
+    protected $table = 'agentes_quantitativos';
+
     protected $fillable = [
         'risco_tipo_id', 'nome', 'unidade_medida', 'campo_label',
         'nivel_acao', 'limite_tolerancia', 'limite_rgi',
@@ -36,7 +39,7 @@ class AgenteQuantitativo extends Model
     {
         return $this->faixas
             ->first(function (AgenteFaixa $f) use ($valor) {
-                $acimaDaMin = $valor >= $f->valor_min;
+                $acimaDaMin  = $valor >= $f->valor_min;
                 $abaixoDoMax = is_null($f->valor_max) || $valor <= $f->valor_max;
                 return $acimaDaMin && $abaixoDoMax;
             });
