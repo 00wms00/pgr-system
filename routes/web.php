@@ -30,7 +30,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('unidades', UnidadeController::class);
 
     // Sprint 3 — Setores
-    Route::resource('setores', SetorController::class);
+    // Parâmetro forçado para {setor} pois Laravel pluraliza incorretamente para {setore}
+    Route::resource('setores', SetorController::class)
+        ->parameters(['setores' => 'setor']);
 
     // Sprint 4 — GHEs
     Route::resource('ghes', GheController::class);
