@@ -5,17 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\EmpresaElaboradoraRequest;
 use App\Models\EmpresaElaboradora;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class EmpresaElaboradoraController extends Controller
 {
-    public function __construct()
-    {
-        $this->authorizeResource(EmpresaElaboradora::class, 'empresa_elaboradora');
-    }
-
     public function index(): View
     {
+        Gate::authorize('viewAny', EmpresaElaboradora::class);
+
         $empresas = EmpresaElaboradora::orderBy('razao_social')->paginate(15);
 
         return view('empresas-elaboradoras.index', compact('empresas'));
@@ -23,11 +21,15 @@ class EmpresaElaboradoraController extends Controller
 
     public function create(): View
     {
+        Gate::authorize('create', EmpresaElaboradora::class);
+
         return view('empresas-elaboradoras.create');
     }
 
     public function store(EmpresaElaboradoraRequest $request): RedirectResponse
     {
+        Gate::authorize('create', EmpresaElaboradora::class);
+
         $empresa = EmpresaElaboradora::create($request->validated());
 
         return redirect()
@@ -37,6 +39,8 @@ class EmpresaElaboradoraController extends Controller
 
     public function show(EmpresaElaboradora $empresaElaboradora): View
     {
+        Gate::authorize('view', $empresaElaboradora);
+
         return view('empresas-elaboradoras.show', [
             'empresa' => $empresaElaboradora,
         ]);
@@ -44,6 +48,8 @@ class EmpresaElaboradoraController extends Controller
 
     public function edit(EmpresaElaboradora $empresaElaboradora): View
     {
+        Gate::authorize('update', $empresaElaboradora);
+
         return view('empresas-elaboradoras.edit', [
             'empresa' => $empresaElaboradora,
         ]);
@@ -51,6 +57,8 @@ class EmpresaElaboradoraController extends Controller
 
     public function update(EmpresaElaboradoraRequest $request, EmpresaElaboradora $empresaElaboradora): RedirectResponse
     {
+        Gate::authorize('update', $empresaElaboradora);
+
         $empresaElaboradora->update($request->validated());
 
         return redirect()
@@ -60,6 +68,8 @@ class EmpresaElaboradoraController extends Controller
 
     public function destroy(EmpresaElaboradora $empresaElaboradora): RedirectResponse
     {
+        Gate::authorize('delete', $empresaElaboradora);
+
         $empresaElaboradora->delete();
 
         return redirect()
