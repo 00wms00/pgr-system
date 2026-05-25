@@ -10,7 +10,7 @@ require __DIR__.'/auth.php';
 // Autenticado
 // ----------------------------------------------------------------
 Route::middleware('auth')->group(function () {
-    Route::get('/dashboard', fn() => view('dashboard'))->name('dashboard');
+    Route::get('/dashboard', \App\Http\Controllers\DashboardController::class)->name('dashboard');
 
     Route::get('/profile',    [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
@@ -26,7 +26,7 @@ Route::middleware(['auth', 'role:admin,gestor'])->group(function () {
     Route::resource('ghes',       \App\Http\Controllers\GheController::class);
     Route::resource('riscos',     \App\Http\Controllers\RiscoInventarioController::class);
 
-    // Avaliações — parametro explicitamente 'avaliacao' (sem acento no bind)
+    // Avaliações
     Route::get(   '/riscos/{risco}/avaliar',          [\App\Http\Controllers\AvaliacaoRiscoController::class, 'create'])->name('avaliacoes.create');
     Route::post(  '/riscos/{risco}/avaliacoes',        [\App\Http\Controllers\AvaliacaoRiscoController::class, 'store'])->name('avaliacoes.store');
     Route::get(   '/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'show'])->name('avaliacoes.show');
@@ -34,7 +34,7 @@ Route::middleware(['auth', 'role:admin,gestor'])->group(function () {
     Route::put(   '/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'update'])->name('avaliacoes.update');
     Route::delete('/avaliacoes/{avaliacao}',           [\App\Http\Controllers\AvaliacaoRiscoController::class, 'destroy'])->name('avaliacoes.destroy');
 
-    // Planos de ação
+    // Planos de Ação
     Route::get(   '/avaliacoes/{avaliacao}/planos/create', [\App\Http\Controllers\PlanoAcaoController::class, 'create'])->name('planos.create');
     Route::post(  '/planos',                               [\App\Http\Controllers\PlanoAcaoController::class, 'store'])->name('planos.store');
     Route::get(   '/planos/{plano}/edit',                  [\App\Http\Controllers\PlanoAcaoController::class, 'edit'])->name('planos.edit');
