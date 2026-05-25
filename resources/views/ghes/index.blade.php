@@ -1,65 +1,120 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="text-xl font-semibold text-gray-800">GHEs — Grupos Homogêneos de Exposição</h2>
-            <a href="{{ route('ghes.create') }}"
-               class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
-                + Novo GHE
-            </a>
-        </div>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <x-alert />
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
-                        <tr>
-                            <th class="px-4 py-3 text-left">Código</th>
-                            <th class="px-4 py-3 text-left">Nome</th>
-                            <th class="px-4 py-3 text-left">Setor / Unidade</th>
-                            <th class="px-4 py-3 text-left">Status</th>
-                            <th class="px-4 py-3"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($ghes as $ghe)
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-4 py-3 font-mono text-gray-600 text-xs">{{ $ghe->codigo }}</td>
-                            <td class="px-4 py-3 font-medium">{{ $ghe->nome }}</td>
-                            <td class="px-4 py-3 text-gray-500">
-                                {{ $ghe->setor->nome }}
-                                <span class="text-gray-400">· {{ $ghe->setor->unidade->nome }}</span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="text-xs px-2 py-1 rounded-full {{ $ghe->ativo ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500' }}">
-                                    {{ $ghe->ativo ? 'Ativo' : 'Inativo' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-right space-x-3">
-                                <a href="{{ route('ghes.edit', $ghe) }}"
-                                   class="text-blue-600 hover:underline text-xs">Editar</a>
-                                <form action="{{ route('ghes.destroy', $ghe) }}"
-                                      method="POST" class="inline"
-                                      onsubmit="return confirm('Remover este GHE?')">
-                                    @csrf @method('DELETE')
-                                    <button class="text-red-500 hover:underline text-xs">Remover</button>
-                                </form>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="5" class="px-4 py-12 text-center text-gray-400 text-sm">
-                                Nenhum GHE cadastrado.
-                                <a href="{{ route('ghes.create') }}" class="text-blue-600 hover:underline ml-1">Criar o primeiro</a>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            <div class="mt-4">{{ $ghes->links() }}</div>
-        </div>
+@section('titulo', 'GHEs')
+
+@section('conteudo')
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+    <div>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:0">GHEs</h2>
+        <p style="font-size:.8rem;color:#64748b;margin:2px 0 0">Grupos Homogêneos de Exposição da empresa</p>
     </div>
-</x-app-layout>
+    @can('create', App\Models\Ghe::class)
+    <a href="{{ route('ghes.create') }}"
+        style="display:inline-flex;align-items:center;gap:6px;background:#3b82f6;color:#fff;padding:8px 16px;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+        Novo GHE
+    </a>
+    @endcan
+</div>
+
+@if($ghes->isEmpty())
+    <div style="text-align:center;padding:60px 20px;background:#fff;border-radius:10px;border:1px solid #e2e8f0">
+        <svg width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <p style="font-size:.9rem;font-weight:600;color:#475569;margin:0 0 4px">Nenhum GHE cadastrado</p>
+        <p style="font-size:.8rem;color:#94a3b8;margin:0 0 16px">Cadastre o primeiro Grupo Homogêneo de Exposição.</p>
+        @can('create', App\Models\Ghe::class)
+        <a href="{{ route('ghes.create') }}"
+            style="display:inline-flex;align-items:center;gap:6px;background:#3b82f6;color:#fff;padding:8px 16px;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none">
+            Cadastrar GHE
+        </a>
+        @endcan
+    </div>
+@else
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0">
+                    <th style="padding:10px 16px;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Cód.</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">GHE</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Setor</th>
+                    <th style="padding:10px 16px;text-align:left;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Unidade</th>
+                    <th style="padding:10px 16px;text-align:center;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Status</th>
+                    <th style="padding:10px 16px;text-align:right;font-size:.75rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:.05em">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($ghes as $ghe)
+                <tr style="border-bottom:1px solid #f1f5f9" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+                    <td style="padding:12px 16px;font-size:.78rem;color:#64748b;font-family:monospace">{{ $ghe->codigo ?? '—' }}</td>
+                    <td style="padding:12px 16px">
+                        <a href="{{ route('ghes.show', $ghe) }}"
+                            style="font-size:.85rem;font-weight:600;color:#1e293b;text-decoration:none">
+                            {{ $ghe->nome }}
+                        </a>
+                        @if($ghe->descricao_atividades)
+                        <p style="font-size:.75rem;color:#94a3b8;margin:2px 0 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px">
+                            {{ $ghe->descricao_atividades }}
+                        </p>
+                        @endif
+                    </td>
+                    <td style="padding:12px 16px">
+                        <a href="{{ route('setores.show', $ghe->setor) }}"
+                            style="font-size:.82rem;color:#475569;text-decoration:none">
+                            {{ $ghe->setor->nome }}
+                        </a>
+                    </td>
+                    <td style="padding:12px 16px">
+                        <a href="{{ route('unidades.show', $ghe->setor->unidade) }}"
+                            style="font-size:.82rem;color:#3b82f6;text-decoration:none">
+                            {{ $ghe->setor->unidade->nome }}
+                        </a>
+                    </td>
+                    <td style="padding:12px 16px;text-align:center">
+                        @if($ghe->ativo)
+                            <span style="display:inline-flex;align-items:center;gap:4px;background:#dcfce7;color:#15803d;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#16a34a;display:inline-block"></span>
+                                Ativo
+                            </span>
+                        @else
+                            <span style="display:inline-flex;align-items:center;gap:4px;background:#f1f5f9;color:#64748b;padding:2px 10px;border-radius:20px;font-size:.72rem;font-weight:600">
+                                <span style="width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block"></span>
+                                Inativo
+                            </span>
+                        @endif
+                    </td>
+                    <td style="padding:12px 16px;text-align:right">
+                        <div style="display:inline-flex;gap:6px">
+                            <a href="{{ route('ghes.show', $ghe) }}" title="Ver"
+                                style="width:30px;height:30px;border-radius:6px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;color:#475569;text-decoration:none">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
+                            @can('update', $ghe)
+                            <a href="{{ route('ghes.edit', $ghe) }}" title="Editar"
+                                style="width:30px;height:30px;border-radius:6px;background:#f1f5f9;display:inline-flex;align-items:center;justify-content:center;color:#475569;text-decoration:none">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </a>
+                            @endcan
+                            @can('delete', $ghe)
+                            <form method="POST" action="{{ route('ghes.destroy', $ghe) }}"
+                                onsubmit="return confirm('Remover o GHE \"{{ addslashes($ghe->nome) }}\"?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" title="Remover"
+                                    style="width:30px;height:30px;border-radius:6px;background:#fef2f2;border:none;display:inline-flex;align-items:center;justify-content:center;color:#ef4444;cursor:pointer">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </form>
+                            @endcan
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        @if($ghes->hasPages())
+        <div style="padding:12px 16px;border-top:1px solid #f1f5f9">{{ $ghes->links() }}</div>
+        @endif
+    </div>
+@endif
+@endsection

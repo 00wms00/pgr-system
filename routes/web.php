@@ -29,8 +29,21 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 3: Setores
     Route::resource('setores', SetorController::class);
 
+    // Sprint 4: GHEs
+    Route::resource('ghes', GheController::class);
+
+    // API auxiliar — retorna setores de uma unidade (para o select encadeado)
+    Route::get('/api/unidades/{unidade}/setores', function (\App\Models\Unidade $unidade) {
+        abort_unless(
+            auth()->user()->empresa_id === $unidade->empresa_id,
+            403
+        );
+        return response()->json(
+            $unidade->setores()->orderBy('nome')->get(['id', 'nome'])
+        );
+    })->name('api.unidades.setores');
+
     // Sprints futuras (stubs)
-    Route::get('/ghes',          [GheController::class,            'index'])->name('ghes.index');
     Route::get('/riscos',        [RiscoInventarioController::class,'index'])->name('riscos.index');
     Route::get('/relatorio/pgr', [RelatorioPgrController::class,   'index'])->name('relatorio.pgr');
     Route::get('/admin/usuarios',fn() => abort(501, 'Em desenvolvimento'))->name('admin.usuarios.index');

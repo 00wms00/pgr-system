@@ -1,26 +1,33 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="text-xl font-semibold text-gray-800">Novo GHE</h2>
-    </x-slot>
+@extends('layouts.app')
 
-    <div class="py-6">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <form action="{{ route('ghes.store') }}" method="POST" class="space-y-4">
-                    @csrf
-                    @include('ghes._form')
-                    <div class="flex gap-3 pt-2">
-                        <button type="submit"
-                            class="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition">
-                            Salvar GHE
-                        </button>
-                        <a href="{{ route('ghes.index') }}"
-                           class="px-5 py-2 bg-gray-100 text-gray-700 text-sm rounded-lg hover:bg-gray-200 transition">
-                            Cancelar
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
+@section('titulo', 'Novo GHE')
+
+@section('conteudo')
+<div style="max-width:640px">
+    <div style="margin-bottom:20px">
+        <a href="{{ route('ghes.index') }}"
+            style="display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:#64748b;text-decoration:none">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+            Voltar para GHEs
+        </a>
+        <h2 style="font-size:1.1rem;font-weight:700;color:#1e293b;margin:8px 0 2px">Novo GHE</h2>
+        <p style="font-size:.8rem;color:#64748b;margin:0">Grupo Homogêneo de Exposição — vincule ao setor correspondente.</p>
     </div>
-</x-app-layout>
+    <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;padding:24px">
+        <form method="POST" action="{{ route('ghes.store') }}">
+            @csrf
+            @include('ghes._form')
+            <div style="display:flex;gap:10px;margin-top:24px;padding-top:20px;border-top:1px solid #f1f5f9">
+                <button type="submit"
+                    style="background:#3b82f6;color:#fff;padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:600;border:none;cursor:pointer">
+                    Salvar GHE
+                </button>
+                <a href="{{ route('ghes.index') }}"
+                    style="padding:9px 20px;border-radius:7px;font-size:.85rem;font-weight:500;color:#475569;background:#f1f5f9;text-decoration:none">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+@endsection
