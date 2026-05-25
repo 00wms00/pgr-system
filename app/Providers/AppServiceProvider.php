@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
-use App\Enums\UserRole;
-use Illuminate\Support\Facades\Blade;
+use App\Models\EmpresaElaboradora;
+use App\Models\Unidade;
+use App\Policies\EmpresaElaboradoraPolicy;
+use App\Policies\UnidadePolicy;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -12,16 +15,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // @role('admin') ... @endrole
-        Blade::directive('role', function (string $role) {
-            return "<?php if(auth()->check() && auth()->user()->role?->value === trim({$role}, \"'\"  )): ?>";
-        });
-        Blade::directive('endrole', fn() => '<?php endif; ?>');
-
-        // @canwrite ... @endcanwrite
-        Blade::directive('canwrite', function () {
-            return '<?php if(auth()->check() && auth()->user()->canWrite()): ?>';
-        });
-        Blade::directive('endcanwrite', fn() => '<?php endif; ?>');
+        // Policies registradas explicitamente
+        Gate::policy(EmpresaElaboradora::class, EmpresaElaboradoraPolicy::class);
+        Gate::policy(Unidade::class, UnidadePolicy::class);
     }
 }

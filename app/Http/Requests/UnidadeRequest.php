@@ -7,29 +7,35 @@ use Illuminate\Validation\Rule;
 
 class UnidadeRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true; // Gate::authorize() já é feito no controller
+    }
 
     public function rules(): array
     {
-        $id = $this->route('unidade')?->id;
+        $empresaId = auth()->user()->empresa_id;
+        $unidadeId = $this->route('unidade')?->id;
 
         return [
-            'codigo'   => [
-                'required', 'string', 'max:20',
-                Rule::unique('unidades')
-                    ->where('empresa_id', auth()->user()->empresa_id)
-                    ->ignore($id),
+            'codigo' => [
+                'nullable',
+                'string',
+                'max:20',
+                Rule::unique('unidades', 'codigo')
+                    ->where('empresa_id', $empresaId)
+                    ->ignore($unidadeId),
             ],
-            'nome'     => ['required', 'string', 'max:255'],
-            'endereco' => ['nullable', 'string', 'max:500'],
+            'nome'     => ['required', 'string', 'max:150'],
+            'endereco' => ['nullable', 'string', 'max:255'],
         ];
     }
 
-    public function attributes(): array
+    public function messages(): array
     {
         return [
-            'codigo' => 'código',
-            'nome'   => 'nome',
+            'nome.required' => 'O nome da unidade é obrigatório.',
+            'codigo.unique' => 'Já existe uma unidade com este código na sua empresa.',
         ];
     }
 }

@@ -1,34 +1,49 @@
-<div class="grid grid-cols-2 gap-4">
+<div style="display:grid;gap:20px">
+
+    {{-- Código --}}
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-            Código <span class="text-red-500">*</span>
-            <span class="text-gray-400 font-normal text-xs ml-1">(ex: SP-01)</span>
+        <label for="codigo" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Código <span style="color:#94a3b8;font-weight:400">(opcional)</span>
         </label>
-        <input type="text" name="codigo"
-               value="{{ old('codigo', $unidade->codigo ?? '') }}"
-               placeholder="SP-01"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 @error('codigo') border-red-400 @enderror">
-        @error('codigo')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+        <input type="text" id="codigo" name="codigo"
+            value="{{ old('codigo', $unidade->codigo ?? '') }}"
+            placeholder="Ex.: UN-01"
+            maxlength="20"
+            style="width:100%;max-width:200px;padding:8px 12px;border:1px solid {{ $errors->has('codigo') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b;outline:none">
+        @error('codigo')
+            <p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>
+        @enderror
     </div>
+
+    {{-- Nome --}}
     <div>
-        <label class="block text-sm font-medium text-gray-700 mb-1">
-            Nome <span class="text-red-500">*</span>
+        <label for="nome" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Nome da Unidade <span style="color:#ef4444">*</span>
         </label>
-        <input type="text" name="nome"
-               value="{{ old('nome', $unidade->nome ?? '') }}"
-               placeholder="Planta Industrial SP"
-               class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 @error('nome') border-red-400 @enderror">
-        @error('nome')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+        <input type="text" id="nome" name="nome"
+            value="{{ old('nome', $unidade->nome ?? '') }}"
+            placeholder="Ex.: Sede Dourados"
+            maxlength="150"
+            autofocus
+            style="width:100%;padding:8px 12px;border:1px solid {{ $errors->has('nome') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b;outline:none">
+        @error('nome')
+            <p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>
+        @enderror
     </div>
-</div>
-<div>
-    <label class="block text-sm font-medium text-gray-700 mb-1">
-        Endereço
-        <span class="text-gray-400 font-normal text-xs">(opcional)</span>
-    </label>
-    <input type="text" name="endereco"
-           value="{{ old('endereco', $unidade->endereco ?? '') }}"
-           placeholder="Rua, número, bairro — Cidade, UF"
-           class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-    @error('endereco')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+
+    {{-- Endereço --}}
+    <div>
+        <label for="endereco" style="display:block;font-size:.82rem;font-weight:600;color:#374151;margin-bottom:5px">
+            Endereço <span style="color:#94a3b8;font-weight:400">(opcional)</span>
+        </label>
+        <input type="text" id="endereco" name="endereco"
+            value="{{ old('endereco', $unidade->endereco ?? '') }}"
+            placeholder="Rua, número, bairro, cidade — UF"
+            maxlength="255"
+            style="width:100%;padding:8px 12px;border:1px solid {{ $errors->has('endereco') ? '#fca5a5' : '#d1d5db' }};border-radius:7px;font-size:.85rem;color:#1e293b;outline:none">
+        @error('endereco')
+            <p style="font-size:.75rem;color:#ef4444;margin:4px 0 0">{{ $message }}</p>
+        @enderror
+    </div>
+
 </div>
