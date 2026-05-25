@@ -74,7 +74,23 @@ class RiscoInventarioController extends Controller
     {
         Gate::authorize('view', $risco);
 
-        $risco->load(['ghe.setor.unidade', 'riscoTipo', 'avaliacoes']);
+        /*
+         * Carrega avaliações com:
+         *   - riscoInventario.ghe.setor.unidade  → necessário para a Policy de AvaliacaoRisco
+         *     (pertenceAEmpresa usa loadMissing, mas se a relação já estiver carregada
+         *      sem a cadeia completa, loadMissing não a recarrega — por isso
+         *      precisamos garantir aqui)
+         *   - planosAcao  → para exibir contador na tabela da view
+         *   - avaliador   → caso queira exibir o nome
+         */
+        $risco->load([
+            'ghe.setor.unidade',
+            'riscoTipo',
+            'avaliacoes.planosAcao',
+            'avaliacoes.avaliador',
+            // garante que cada avaliação tenha o caminho completo para a Policy
+            'avaliacoes.riscoInventario.ghe.setor.unidade',
+        ]);
 
         return view('riscos.show', compact('risco'));
     }
