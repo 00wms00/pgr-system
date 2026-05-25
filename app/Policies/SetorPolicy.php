@@ -14,8 +14,10 @@ class SetorPolicy
 
     public function view(User $user, Setor $setor): bool
     {
-        // Sobe a hierarquia: Setor → Unidade → Empresa
-        return $user->empresa_id === $setor->unidade->empresa_id;
+        $setor->loadMissing('unidade');
+
+        return $setor->unidade !== null
+            && $user->empresa_id === $setor->unidade->empresa_id;
     }
 
     public function create(User $user): bool
@@ -25,11 +27,19 @@ class SetorPolicy
 
     public function update(User $user, Setor $setor): bool
     {
-        return $user->canWrite() && $user->empresa_id === $setor->unidade->empresa_id;
+        $setor->loadMissing('unidade');
+
+        return $user->canWrite()
+            && $setor->unidade !== null
+            && $user->empresa_id === $setor->unidade->empresa_id;
     }
 
     public function delete(User $user, Setor $setor): bool
     {
-        return $user->canWrite() && $user->empresa_id === $setor->unidade->empresa_id;
+        $setor->loadMissing('unidade');
+
+        return $user->canWrite()
+            && $setor->unidade !== null
+            && $user->empresa_id === $setor->unidade->empresa_id;
     }
 }

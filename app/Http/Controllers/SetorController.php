@@ -46,15 +46,19 @@ class SetorController extends Controller
 
     public function show(Setor $setor): View
     {
-        Gate::authorize('view', $setor);
-
+        // Eager load ANTES do Gate para que a Policy encontre a unidade
         $setor->load('unidade', 'ghes');
+
+        Gate::authorize('view', $setor);
 
         return view('setores.show', compact('setor'));
     }
 
     public function edit(Setor $setor): View
     {
+        // Eager load ANTES do Gate
+        $setor->load('unidade');
+
         Gate::authorize('update', $setor);
 
         $unidades = Unidade::where('empresa_id', auth()->user()->empresa_id)
@@ -66,6 +70,8 @@ class SetorController extends Controller
 
     public function update(SetorRequest $request, Setor $setor): RedirectResponse
     {
+        $setor->load('unidade');
+
         Gate::authorize('update', $setor);
 
         $setor->update($request->validated());
@@ -76,6 +82,8 @@ class SetorController extends Controller
 
     public function destroy(Setor $setor): RedirectResponse
     {
+        $setor->load('unidade');
+
         Gate::authorize('delete', $setor);
 
         $setor->delete();
