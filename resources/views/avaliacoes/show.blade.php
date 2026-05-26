@@ -29,7 +29,6 @@
     {{-- Header --}}
     <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;gap:12px;flex-wrap:wrap">
         <div style="display:flex;align-items:center;gap:16px">
-            {{-- Nível visual --}}
             <div style="width:64px;height:64px;border-radius:10px;background:{{ $cor['bg'] }};border:1px solid {{ $cor['border'] }};display:flex;flex-direction:column;align-items:center;justify-content:center">
                 <span style="font-size:1.6rem;font-weight:900;color:{{ $cor['text'] }};line-height:1">{{ $avaliacao->nivel_risco }}</span>
                 <span style="font-size:.6rem;font-weight:700;color:{{ $cor['text'] }};text-transform:uppercase;letter-spacing:.04em">{{ $cor['label'] }}</span>
@@ -59,7 +58,7 @@
         <a href="{{ route('avaliacoes.edit', $avaliacao) }}"
             style="display:inline-flex;align-items:center;gap:6px;background:#f1f5f9;color:#475569;padding:7px 14px;border-radius:7px;font-size:.82rem;font-weight:600;text-decoration:none">
             <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-            Editar
+            Editar Avaliação
         </a>
         @endcan
     </div>
@@ -108,17 +107,27 @@
         <p style="font-size:.73rem;color:#94a3b8;margin:8px 0 0">A célula destacada em azul representa o ponto avaliado.</p>
     </div>
 
-    {{-- Planos de Ação vinculados --}}
+    {{-- Planos de Ação --}}
     <div style="background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden">
-        <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9">
+
+        {{-- Cabeçalho com botão Novo Plano --}}
+        <div style="padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
             <h3 style="font-size:.9rem;font-weight:700;color:#1e293b;margin:0">
                 Planos de Ação
                 <span style="font-size:.75rem;font-weight:500;color:#64748b;margin-left:6px">({{ $avaliacao->planosAcao->count() }})</span>
             </h3>
+            <a href="{{ route('avaliacoes.planos.create', $avaliacao) }}"
+               style="display:inline-flex;align-items:center;gap:5px;background:#0f766e;color:#fff;padding:6px 13px;border-radius:7px;font-size:.8rem;font-weight:600;text-decoration:none">
+                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Novo Plano
+            </a>
         </div>
+
         @if($avaliacao->planosAcao->isEmpty())
-        <div style="padding:28px;text-align:center">
-            <p style="font-size:.85rem;color:#94a3b8;margin:0">Nenhum plano de ação vinculado a esta avaliação.</p>
+        <div style="padding:32px;text-align:center">
+            <svg width="32" height="32" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+            <p style="font-size:.85rem;color:#94a3b8;margin:0">Nenhum plano de ação vinculado.</p>
+            <p style="font-size:.8rem;color:#cbd5e1;margin:4px 0 0">Clique em "Novo Plano" para adicionar.</p>
         </div>
         @else
         <table style="width:100%;border-collapse:collapse">
@@ -128,18 +137,45 @@
                     <th style="padding:9px 16px;text-align:left;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">Responsável</th>
                     <th style="padding:9px 16px;text-align:left;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">Prazo</th>
                     <th style="padding:9px 16px;text-align:left;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">Status</th>
+                    <th style="padding:9px 16px;text-align:center;font-size:.73rem;font-weight:600;color:#64748b;text-transform:uppercase">Ações</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($avaliacao->planosAcao as $plano)
+                @php
+                    $statusCor = match($plano->status ?? 'pendente') {
+                        'em_andamento' => ['bg'=>'#eff6ff','text'=>'#1d4ed8'],
+                        'concluido'    => ['bg'=>'#f0fdf4','text'=>'#15803d'],
+                        default        => ['bg'=>'#f8fafc','text'=>'#475569'],
+                    };
+                    $statusLabel = match($plano->status ?? 'pendente') {
+                        'em_andamento' => 'Em andamento',
+                        'concluido'    => 'Concluído',
+                        default        => 'Pendente',
+                    };
+                @endphp
                 <tr style="border-top:1px solid #f1f5f9">
-                    <td style="padding:10px 16px;font-size:.82rem;color:#374151">{{ Str::limit($plano->acao ?? $plano->descricao, 80) }}</td>
+                    <td style="padding:10px 16px;font-size:.82rem;color:#374151">{{ Str::limit($plano->acao ?? $plano->descricao, 70) }}</td>
                     <td style="padding:10px 16px;font-size:.82rem;color:#475569">{{ $plano->responsavel ?? '—' }}</td>
-                    <td style="padding:10px 16px;font-size:.82rem;color:#475569">{{ $plano->prazo ? \Carbon\Carbon::parse($plano->prazo)->format('d/m/Y') : '—' }}</td>
+                    <td style="padding:10px 16px;font-size:.82rem;color:#475569;white-space:nowrap">{{ $plano->prazo ? \Carbon\Carbon::parse($plano->prazo)->format('d/m/Y') : '—' }}</td>
                     <td style="padding:10px 16px">
-                        <span style="font-size:.75rem;font-weight:600;background:#f1f5f9;color:#475569;padding:2px 8px;border-radius:5px">
-                            {{ ucfirst($plano->status ?? 'pendente') }}
+                        <span style="font-size:.75rem;font-weight:600;background:{{ $statusCor['bg'] }};color:{{ $statusCor['text'] }};padding:3px 9px;border-radius:5px">
+                            {{ $statusLabel }}
                         </span>
+                    </td>
+                    <td style="padding:10px 16px;text-align:center;white-space:nowrap">
+                        {{-- Ver --}}
+                        <a href="{{ route('planos.show', $plano) }}"
+                           title="Visualizar"
+                           style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:#f1f5f9;color:#475569;text-decoration:none;margin-right:4px">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        </a>
+                        {{-- Editar --}}
+                        <a href="{{ route('planos.edit', $plano) }}"
+                           title="Editar"
+                           style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:6px;background:#f1f5f9;color:#475569;text-decoration:none">
+                            <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </a>
                     </td>
                 </tr>
                 @endforeach
