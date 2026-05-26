@@ -4,14 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\GheRequest;
 use App\Models\Ghe;
-use App\Models\GheCargo;
-use App\Models\GheCbo;
 use App\Models\Setor;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
 class GheController extends Controller
 {
+    use AuthorizesRequests;
+
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
