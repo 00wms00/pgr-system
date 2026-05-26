@@ -73,7 +73,8 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
     // Sprint 8 — Relatório PGR
-    Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
+    Route::get('/relatorio/pgr',          [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
+    Route::get('/relatorio/pgr/exportar', [RelatorioPgrController::class, 'exportarPdf'])->name('relatorio.pgr.pdf');
 
     // API auxiliar: agentes quantitativos por risco_tipo + cálculo em tempo real
     Route::get('/api/agentes/por-risco-tipo/{riscoTipoId}', [AgenteCalculadorController::class, 'porRiscoTipo'])
