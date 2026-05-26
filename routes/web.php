@@ -28,7 +28,7 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 2
     Route::resource('unidades', UnidadeController::class);
 
-    // Sprint 3 — parâmetro forçado: Laravel pluraliza 'setores' → '{setore}' sem isso
+    // Sprint 3
     Route::resource('setores', SetorController::class)
         ->parameters(['setores' => 'setor']);
 
@@ -46,12 +46,14 @@ Route::middleware(['auth'])->group(function () {
     // Sprint 5
     Route::resource('riscos', RiscoInventarioController::class);
 
-    // Sprint 6 — parâmetro forçado: Laravel trunca 'avaliacoes' → '{avaliaco}' por causa do acento
+    // Sprint 6
     Route::resource('riscos.avaliacoes', AvaliacaoRiscoController::class)
         ->shallow()
         ->parameters(['avaliacoes' => 'avaliacao']);
 
-    // Sprint 7 — parâmetro forçado: mesmo problema com 'planos'
+    // Sprint 7 — listagem global + nested/shallow
+    Route::get('/planos', [PlanoAcaoController::class, 'all'])->name('planos.all');
+
     Route::resource('avaliacoes.planos', PlanoAcaoController::class)
         ->shallow()
         ->parameters([

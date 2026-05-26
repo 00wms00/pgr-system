@@ -6,10 +6,15 @@ use App\Http\Requests\PlanoAcaoRequest;
 use App\Models\AvaliacaoRisco;
 use App\Models\PlanoAcao;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class PlanoAcaoController extends Controller
 {
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
     private function freshAvaliacao(AvaliacaoRisco $avaliacao, array $extra = []): AvaliacaoRisco
     {
         return AvaliacaoRisco::with(array_merge([
@@ -38,12 +43,68 @@ class PlanoAcaoController extends Controller
         }
     }
 
+    // -------------------------------------------------------------------------
+    // Listagem global (GET /planos)
+    // -------------------------------------------------------------------------
+
+    public function all(Request $request): View
+    {
+        $user      = auth()->user();
+        $status    = $request->query('status');
+        $busca     = $request->query('busca');
+
+        $query = PlanoAcao::with([
+            'avaliacaoRisco.riscoInventario.riscoTipo',
+            'avaliacaoRisco.riscoInventario.ghe.setor.unidade',
+        ])
+        ->whereHas('avaliacaoRisco.riscoInventario.ghe.setor.unidade', function ($q) use ($user) {
+            $q->where('empresa_id', $user->empresa_id);
+        });
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($busca) {
+            $query->where(function ($q) use ($busca) {
+                $q->where('acao', 'ilike', "%{$busca}%")
+                  ->orWhere('responsavel', 'ilike', "%{$busca}%");
+            });
+        }
+
+        $planos = $query
+            ->orderByRaw("
+                CASE status
+                    WHEN 'em_andamento' THEN 1
+                    WHEN 'pendente'     THEN 2
+                    WHEN 'concluido'    THEN 3
+                    ELSE 4
+                END
+            ")
+            ->orderBy('prazo')
+            ->paginate(25)
+            ->withQueryString();
+
+        $totaisPorStatus = PlanoAcao::whereHas('avaliacaoRisco.riscoInventario.ghe.setor.unidade', function ($q) use ($user) {
+                $q->where('empresa_id', $user->empresa_id);
+            })
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status')
+            ->toArray();
+
+        return view('planos.all', compact('planos', 'totaisPorStatus', 'status', 'busca'));
+    }
+
+    // -------------------------------------------------------------------------
+    // Rotas nested: avaliacoes/{avaliacao}/planos
+    // -------------------------------------------------------------------------
+
     public function index(AvaliacaoRisco $avaliacao): View
     {
         $avaliacao = $this->freshAvaliacao($avaliacao, ['riscoInventario.riscoTipo']);
         $this->autorizarPorUnidade($avaliacao);
 
-        // FIELD() é MySQL-only; usar CASE WHEN para PostgreSQL
         $planos = $avaliacao->planosAcao()
             ->orderByRaw("
                 CASE status
@@ -80,6 +141,10 @@ class PlanoAcaoController extends Controller
         return redirect()->route('avaliacoes.show', $avaliacao)
             ->with('success', 'Plano de ação cadastrado com sucesso.');
     }
+
+    // -------------------------------------------------------------------------
+    // Rotas shallow: planos/{plano}
+    // -------------------------------------------------------------------------
 
     public function show(PlanoAcao $plano): View
     {
