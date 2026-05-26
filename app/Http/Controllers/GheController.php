@@ -4,18 +4,55 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\GheRequest;
 use App\Models\Ghe;
-use App\Models\Unidade;
+use App\Models\GheCargo;
+use App\Models\GheCbo;
+use App\Models\Setor;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class GheController extends Controller
 {
+    // -----------------------------------------------------------------------
+    // Helpers
+    // -----------------------------------------------------------------------
+
+    private function setoresAutorizados(): \Illuminate\Database\Eloquent\Collection
+    {
+        return Setor::whereHas('unidade', fn ($q) =>
+            $q->where('empresa_id', auth()->user()->empresa_id)
+        )->orderBy('nome')->get();
+    }
+
+    private function syncCbos(Ghe $ghe, array $cbos): void
+    {
+        $ghe->cbos()->delete();
+        foreach ($cbos as $cbo) {
+            if (!empty($cbo['codigo']) && !empty($cbo['descricao'])) {
+                $ghe->cbos()->create([
+                    'codigo'    => trim($cbo['codigo']),
+                    'descricao' => trim($cbo['descricao']),
+                ]);
+            }
+        }
+    }
+
+    private function syncCargos(Ghe $ghe, array $cargos): void
+    {
+        $ghe->cargos()->delete();
+        foreach ($cargos as $cargo) {
+            if (filled($cargo)) {
+                $ghe->cargos()->create(['cargo' => trim($cargo)]);
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // CRUD
+    // -----------------------------------------------------------------------
+
     public function index(): View
     {
-        Gate::authorize('viewAny', Ghe::class);
-
-        $ghes = Ghe::with(['setor.unidade'])
+        $ghes = Ghe::with(['setor.unidade', 'cbos', 'cargos'])
             ->whereHas('setor.unidade', fn ($q) =>
                 $q->where('empresa_id', auth()->user()->empresa_id)
             )
@@ -27,64 +64,61 @@ class GheController extends Controller
 
     public function create(): View
     {
-        Gate::authorize('create', Ghe::class);
-
-        $unidades = Unidade::where('empresa_id', auth()->user()->empresa_id)
-            ->with(['setores' => fn ($q) => $q->orderBy('nome')])
-            ->orderBy('nome')
-            ->get();
-
-        return view('ghes.create', compact('unidades'));
+        $setores = $this->setoresAutorizados();
+        $ghe     = new Ghe();
+        return view('ghes.create', compact('setores', 'ghe'));
     }
 
     public function store(GheRequest $request): RedirectResponse
     {
-        Gate::authorize('create', Ghe::class);
+        $dados = $request->safe()->except(['cbos', 'cargos']);
+        $dados['ativo'] = $request->boolean('ativo', true);
 
-        Ghe::create($request->validated());
+        $ghe = Ghe::create($dados);
+
+        $this->syncCbos($ghe, $request->input('cbos', []));
+        $this->syncCargos($ghe, $request->input('cargos', []));
 
         return redirect()->route('ghes.index')
-            ->with('success', 'GHE criado com sucesso.');
+            ->with('success', 'GHE cadastrado com sucesso.');
     }
 
     public function show(Ghe $ghe): View
     {
-        Gate::authorize('view', $ghe);
-
-        $ghe->load('setor.unidade', 'riscosInventario');
-
+        $this->authorize('view', $ghe);
+        $ghe->load(['setor.unidade', 'cbos', 'cargos', 'riscosInventario.riscoTipo']);
         return view('ghes.show', compact('ghe'));
     }
 
     public function edit(Ghe $ghe): View
     {
-        Gate::authorize('update', $ghe);
-
-        $unidades = Unidade::where('empresa_id', auth()->user()->empresa_id)
-            ->with(['setores' => fn ($q) => $q->orderBy('nome')])
-            ->orderBy('nome')
-            ->get();
-
-        return view('ghes.edit', compact('ghe', 'unidades'));
+        $this->authorize('update', $ghe);
+        $ghe->load(['cbos', 'cargos']);
+        $setores = $this->setoresAutorizados();
+        return view('ghes.edit', compact('ghe', 'setores'));
     }
 
     public function update(GheRequest $request, Ghe $ghe): RedirectResponse
     {
-        Gate::authorize('update', $ghe);
+        $this->authorize('update', $ghe);
 
-        $ghe->update($request->validated());
+        $dados = $request->safe()->except(['cbos', 'cargos']);
+        $dados['ativo'] = $request->boolean('ativo', true);
 
-        return redirect()->route('ghes.index')
+        $ghe->update($dados);
+
+        $this->syncCbos($ghe, $request->input('cbos', []));
+        $this->syncCargos($ghe, $request->input('cargos', []));
+
+        return redirect()->route('ghes.show', $ghe)
             ->with('success', 'GHE atualizado com sucesso.');
     }
 
     public function destroy(Ghe $ghe): RedirectResponse
     {
-        Gate::authorize('delete', $ghe);
-
+        $this->authorize('delete', $ghe);
         $ghe->delete();
-
         return redirect()->route('ghes.index')
-            ->with('success', 'GHE removido com sucesso.');
+            ->with('success', 'GHE removido.');
     }
 }
