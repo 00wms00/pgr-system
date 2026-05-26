@@ -20,49 +20,52 @@ Route::get('/', function () {
 
 Route::middleware(['auth'])->group(function () {
 
-    // Dashboard principal
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    // Sprint 1 — Empresa Elaboradora
+    // Sprint 1
     Route::resource('empresas-elaboradoras', EmpresaElaboradoraController::class);
 
-    // Sprint 2 — Unidades
+    // Sprint 2
     Route::resource('unidades', UnidadeController::class);
 
-    // Sprint 3 — Setores
-    // Parâmetro forçado para {setor} pois Laravel pluraliza incorretamente para {setore}
+    // Sprint 3 — parâmetro forçado: Laravel pluraliza 'setores' → '{setore}' sem isso
     Route::resource('setores', SetorController::class)
         ->parameters(['setores' => 'setor']);
 
-    // Sprint 4 — GHEs
+    // Sprint 4
     Route::resource('ghes', GheController::class);
 
-    // API auxiliar: setores de uma unidade (select encadeado no form GHE)
+    // API auxiliar: setores de uma unidade
     Route::get('/api/unidades/{unidade}/setores', function (\App\Models\Unidade $unidade) {
-        abort_unless(auth()->user()->empresa_id === $unidade->empresa_id, 403);
+        abort_unless((int) auth()->user()->empresa_id === (int) $unidade->empresa_id, 403);
         return response()->json(
             $unidade->setores()->orderBy('nome')->get(['id', 'nome'])
         );
     })->name('api.unidades.setores');
 
-    // Sprint 5 — Riscos Inventário
+    // Sprint 5
     Route::resource('riscos', RiscoInventarioController::class);
 
-    // Sprint 6 — Avaliações de Risco (nested + shallow)
-    Route::resource('riscos.avaliacoes', AvaliacaoRiscoController::class)->shallow();
+    // Sprint 6 — parâmetro forçado: Laravel trunca 'avaliacoes' → '{avaliaco}' por causa do acento
+    Route::resource('riscos.avaliacoes', AvaliacaoRiscoController::class)
+        ->shallow()
+        ->parameters(['avaliacoes' => 'avaliacao']);
 
-    // Sprint 7 — Planos de Ação (nested em avaliações + shallow)
-    Route::resource('avaliacoes.planos', PlanoAcaoController::class)->shallow();
+    // Sprint 7 — parâmetro forçado: mesmo problema com 'planos'
+    Route::resource('avaliacoes.planos', PlanoAcaoController::class)
+        ->shallow()
+        ->parameters([
+            'avaliacoes' => 'avaliacao',
+            'planos'     => 'plano',
+        ]);
 
-    // Sprint 8 — Relatório PGR
+    // Sprint 8
     Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
 
-    // Administração (somente Admin via Policy)
+    // Admin
     Route::prefix('admin')->name('admin.')->group(function () {
-        Route::resource('usuarios', AdminUsuarioController::class)
-            ->except(['show']);
-        Route::resource('empresas', AdminEmpresaController::class)
-            ->except(['show']);
+        Route::resource('usuarios', AdminUsuarioController::class)->except(['show']);
+        Route::resource('empresas', AdminEmpresaController::class)->except(['show']);
     });
 
     // Profile (Breeze)
