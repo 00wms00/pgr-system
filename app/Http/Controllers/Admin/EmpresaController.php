@@ -5,12 +5,34 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\EmpresaRequest;
 use App\Models\Empresa;
+use App\Models\EmpresaCnae;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 
 class EmpresaController extends Controller
 {
+    // -----------------------------------------------------------------------
+    // Helper: sincroniza CNAEs secundários
+    // -----------------------------------------------------------------------
+
+    private function syncCnaes(Empresa $empresa, array $cnaes): void
+    {
+        $empresa->cnaesSecundarios()->delete();
+        foreach ($cnaes as $c) {
+            if (!empty($c['codigo']) && !empty($c['descricao'])) {
+                $empresa->cnaesSecundarios()->create([
+                    'codigo'    => trim($c['codigo']),
+                    'descricao' => trim($c['descricao']),
+                ]);
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // CRUD
+    // -----------------------------------------------------------------------
+
     public function index(): View
     {
         Gate::authorize('viewAny', Empresa::class);
@@ -25,15 +47,19 @@ class EmpresaController extends Controller
     public function create(): View
     {
         Gate::authorize('create', Empresa::class);
-
-        return view('admin.empresas.create');
+        $empresa = new Empresa();
+        return view('admin.empresas.create', compact('empresa'));
     }
 
     public function store(EmpresaRequest $request): RedirectResponse
     {
         Gate::authorize('create', Empresa::class);
 
-        Empresa::create($request->validated());
+        $dados = $request->safe()->except(['cnaes']);
+        $dados['ativo'] = $request->boolean('ativo', true);
+
+        $empresa = Empresa::create($dados);
+        $this->syncCnaes($empresa, $request->input('cnaes', []));
 
         return redirect()->route('admin.empresas.index')
             ->with('success', 'Empresa criada com sucesso.');
@@ -42,7 +68,7 @@ class EmpresaController extends Controller
     public function edit(Empresa $empresa): View
     {
         Gate::authorize('update', $empresa);
-
+        $empresa->load('cnaesSecundarios');
         return view('admin.empresas.edit', compact('empresa'));
     }
 
@@ -50,7 +76,11 @@ class EmpresaController extends Controller
     {
         Gate::authorize('update', $empresa);
 
-        $empresa->update($request->validated());
+        $dados = $request->safe()->except(['cnaes']);
+        $dados['ativo'] = $request->boolean('ativo', true);
+
+        $empresa->update($dados);
+        $this->syncCnaes($empresa, $request->input('cnaes', []));
 
         return redirect()->route('admin.empresas.index')
             ->with('success', 'Empresa atualizada.');
@@ -60,7 +90,6 @@ class EmpresaController extends Controller
     {
         Gate::authorize('delete', $empresa);
 
-        // Impede exclusão se houver usuários vinculados
         if ($empresa->usuarios()->exists()) {
             return back()->with('error', 'Não é possível excluir uma empresa com usuários vinculados.');
         }
