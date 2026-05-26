@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\EmpresaController as AdminEmpresaController;
 use App\Http\Controllers\Admin\UsuarioController as AdminUsuarioController;
+use App\Http\Controllers\AgenteCalculadorController;
 use App\Http\Controllers\AvaliacaoRiscoController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EmpresaElaboradoraController;
@@ -9,6 +10,7 @@ use App\Http\Controllers\GheController;
 use App\Http\Controllers\PlanoAcaoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RelatorioPgrController;
+use App\Http\Controllers\ResponsavelTecnicoController;
 use App\Http\Controllers\RiscoInventarioController;
 use App\Http\Controllers\SetorController;
 use App\Http\Controllers\UnidadeController;
@@ -22,8 +24,17 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
-    // Sprint 1
-    Route::resource('empresas-elaboradoras', EmpresaElaboradoraController::class);
+    // Sprint 1 — Empresas Elaboradoras + Responsáveis Técnicos (nested shallow)
+    Route::resource('empresas-elaboradoras', EmpresaElaboradoraController::class)
+        ->parameters(['empresas-elaboradoras' => 'empresaElaboradora']);
+
+    Route::resource('empresas-elaboradoras.responsaveis', ResponsavelTecnicoController::class)
+        ->only(['create', 'store', 'edit', 'update', 'destroy'])
+        ->shallow()
+        ->parameters([
+            'empresas-elaboradoras' => 'empresaElaboradora',
+            'responsaveis'          => 'responsavel',
+        ]);
 
     // Sprint 2
     Route::resource('unidades', UnidadeController::class);
@@ -61,8 +72,14 @@ Route::middleware(['auth'])->group(function () {
             'planos'     => 'plano',
         ]);
 
-    // Sprint 8
+    // Sprint 8 — Relatório PGR
     Route::get('/relatorio/pgr', [RelatorioPgrController::class, 'index'])->name('relatorio.pgr');
+
+    // API auxiliar: agentes quantitativos por risco_tipo + cálculo em tempo real
+    Route::get('/api/agentes/por-risco-tipo/{riscoTipoId}', [AgenteCalculadorController::class, 'porRiscoTipo'])
+        ->name('api.agentes.por-risco-tipo');
+    Route::post('/api/agentes/{agente}/calcular', [AgenteCalculadorController::class, 'calcular'])
+        ->name('api.agentes.calcular');
 
     // Admin
     Route::prefix('admin')->name('admin.')->group(function () {
