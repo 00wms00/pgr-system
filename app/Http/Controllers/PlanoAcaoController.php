@@ -10,12 +10,6 @@ use Illuminate\View\View;
 
 class PlanoAcaoController extends Controller
 {
-    // -------------------------------------------------------------------------
-    // Helpers para carregar hierarquia completa e verificar empresa
-    // (mesmo padrão do AvaliacaoRiscoController)
-    // -------------------------------------------------------------------------
-
-    /** Retorna AvaliacaoRisco com hierarquia completa carregada do banco. */
     private function freshAvaliacao(AvaliacaoRisco $avaliacao, array $extra = []): AvaliacaoRisco
     {
         return AvaliacaoRisco::with(array_merge([
@@ -23,7 +17,6 @@ class PlanoAcaoController extends Controller
         ], $extra))->findOrFail($avaliacao->id);
     }
 
-    /** Retorna PlanoAcao com hierarquia completa carregada do banco. */
     private function freshPlano(PlanoAcao $plano, array $extra = []): PlanoAcao
     {
         return PlanoAcao::with(array_merge([
@@ -31,7 +24,6 @@ class PlanoAcaoController extends Controller
         ], $extra))->findOrFail($plano->id);
     }
 
-    /** Confirma que o usuário logado pertence à empresa da unidade. */
     private function autorizarPorUnidade(AvaliacaoRisco $avaliacao, bool $exigeEscrita = false): void
     {
         $unidade = $avaliacao->riscoInventario?->ghe?->setor?->unidade;
@@ -46,17 +38,21 @@ class PlanoAcaoController extends Controller
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Rotas nested: avaliacoes/{avaliacao}/planos
-    // -------------------------------------------------------------------------
-
     public function index(AvaliacaoRisco $avaliacao): View
     {
         $avaliacao = $this->freshAvaliacao($avaliacao, ['riscoInventario.riscoTipo']);
         $this->autorizarPorUnidade($avaliacao);
 
+        // FIELD() é MySQL-only; usar CASE WHEN para PostgreSQL
         $planos = $avaliacao->planosAcao()
-            ->orderByRaw("FIELD(status, 'em_andamento', 'pendente', 'concluido')")
+            ->orderByRaw("
+                CASE status
+                    WHEN 'em_andamento' THEN 1
+                    WHEN 'pendente'     THEN 2
+                    WHEN 'concluido'    THEN 3
+                    ELSE 4
+                END
+            ")
             ->orderBy('prazo')
             ->get();
 
@@ -84,10 +80,6 @@ class PlanoAcaoController extends Controller
         return redirect()->route('avaliacoes.show', $avaliacao)
             ->with('success', 'Plano de ação cadastrado com sucesso.');
     }
-
-    // -------------------------------------------------------------------------
-    // Rotas shallow: planos/{plano}
-    // -------------------------------------------------------------------------
 
     public function show(PlanoAcao $plano): View
     {
